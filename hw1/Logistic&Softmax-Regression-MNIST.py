@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import struct
 import sys
 
+
 def load_mnist_images(path, max_images=sys.maxsize):
     with open(path, 'rb') as f:
         f.read(4)
@@ -128,7 +129,12 @@ def init_adam(w, b):
 
     return v, s
 
-def adam_optimize(X, Y, w, b, v, s, regression='logistic', learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+def adam_optimize(X, Y, parameters, regression='logistic', learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+    w = parameters['w']
+    b = parameters['b']
+    v = parameters['v']
+    s = parameters['s']
+
     if regression == 'logistic':
         grad, cost = logistic_propagate(X, Y, w, b, lambd)
     else:
@@ -146,7 +152,12 @@ def adam_optimize(X, Y, w, b, v, s, regression='logistic', learning_rate=0.001, 
     w -= learning_rate * (v['w'] / (np.sqrt(s['w']) + epsilon))
     b -= learning_rate * (v['b'] / (np.sqrt(s['b']) + epsilon))
 
-    return w, b, v, s, cost
+    parameters['w'] = w
+    parameters['b'] = b
+    parameters['v'] = v
+    parameters['s'] = s
+
+    return parameters, cost
 
 
 def create_batch(X, Y, batch_size):
@@ -216,7 +227,6 @@ def batch_gradient_with_adam(X, Y, n_epoch, batch_size, learning_rate, regressio
     parameters = {'w':w, 'b':b}
     return parameters, cost
 
-
 def predict(X, Y, parameters):
     m = X.shape[-1]
 
@@ -230,6 +240,43 @@ def predict(X, Y, parameters):
     accuracy = np.sum(correct) / m
 
     return P, accuracy
+
+class SoftmaxRegression(object):
+
+    def __init__(self, n_feature, n_classes, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+        self.n_epoch = n_epoch
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.lambd = lambd
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.epsilon = epsilon
+        w, b = init_parameters(n_feature, n_classes)
+        v, s = init_adam(w, b)
+        self.parameters = {'w':w, 'b':b, 'v':v, 's':s}
+        self.cost = -1.
+
+    def fit(self, X, Y):
+        for i in range(self.n_epoch):
+            X_batches, Y_batches, n_batch = create_batch(X, Y, self.batch_size)
+
+            for j in range(n_batch):
+                self.parameters, self.cost = adam_optimize(X_batches[j], Y_batches[j], self.parameters, 'softmax', \
+                self.learning_rate, self.lambd, self.beta1, self.beta2, self.epsilon)
+
+            if i % 20 == 0: print('%d epoches cost: %f' % (i, self.cost))
+
+    def predict(self, X, Y):
+        m = X.shape[-1]
+
+        w = self.parameters['w']
+        b = self.parameters['b']
+        Z = np.dot(w, X) + b
+        A = softmax(Z)
+
+        self.Y_p = np.argmax(A, axis=0)
+        correct = (self.Y_p == Y)
+        self.accuracy = np.sum(correct) / m
 
 
 def __main__():
@@ -254,6 +301,10 @@ def __main__():
     train_Y = one_hot_encoding(train_labels, 10)
     test_Y = one_hot_encoding(test_labels, 10)
 
+    n_feature = train_X.shape[0]
+    n_classes = 10
+
+    '''
     #parameters, cost = batch_gradient(train_X, train_Y, n_epoch=400, batch_size=32, learning_rate=0.001)
     parameters, cost = batch_gradient_with_adam(train_X, train_Y, n_epoch=200, batch_size=32, learning_rate=0.01, regression='logistic', lambd=0.01)
     P, accuracy = predict(test_X, test_labels, parameters)
@@ -262,5 +313,11 @@ def __main__():
     parameters, cost = batch_gradient_with_adam(train_X, train_Y, n_epoch=200, batch_size=32, learning_rate=0.01, regression='softmax', lambd=0.01)
     P, accuracy = predict(test_X, test_labels, parameters)
     print('Softmax Regression Accuracy: %f %%' % (accuracy * 100))
+    '''
+
+    softmax_model = SoftmaxRegression(n_feature, n_classes, n_epoch=400)
+    softmax_model.fit(train_X, train_Y)
+    softmax_model.predict(test_X, test_Y)
+    print('Softmax Regression Accuracy: %f %%' % (softmax_model.accuracy * 100))
 
 __main__()
