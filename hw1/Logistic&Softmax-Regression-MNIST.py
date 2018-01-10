@@ -5,40 +5,8 @@ import matplotlib.pyplot as plt
 import struct
 import sys
 
-
-def load_mnist_images(path, max_images=sys.maxsize):
-    with open(path, 'rb') as f:
-        f.read(4)
-        n = int(struct.unpack('>i', f.read(4))[0])
-        n = min(max_images, n)
-        n_rows = int(struct.unpack('>I', f.read(4))[0])
-        n_cols = int(struct.unpack('>I', f.read(4))[0])
-        images = []
-        for i in range(n):
-            image = np.zeros((n_rows,n_cols), dtype=np.int16)
-            for r in range(n_rows):
-                for c in range(n_cols):
-                    image[r,c] = int(struct.unpack('>B', f.read(1))[0])
-            images.append(image)
-    return np.array(images)
-
-def load_mnist_labels(path, max_labels=sys.maxsize):
-    with open(path, 'rb') as f:
-        f.read(4)
-        n = int(struct.unpack('>i', f.read(4))[0])
-        n = min(max_labels, n)
-        labels = []
-        for i in range(n):
-            label = int(struct.unpack('>B', f.read(1))[0])
-            labels.append(label)
-    return np.array(labels)
-
-def one_hot_encoding(labels, n_feature):
-    m = labels.shape[0]
-    encode = np.zeros((n_feature, m), dtype=int)
-    for i in range(m):
-        encode[labels[i], i] = 1
-    return encode
+from utility import load_mnist_images, load_mnist_labels, softmax, \
+one_hot_encoding, init_parameters
 
 '''
 print(train_X.shape)    # n_feature * m_train
@@ -46,12 +14,6 @@ print(test_X.shape) # n_feature * m_test
 print(train_Y.shape)    # 10 * m_train
 print(test_Y.shape) # 10 * m_test
 '''
-
-def init_parameters(dim1, dim2):
-    w = np.zeros((dim2, dim1))
-    #w = np.random.randn(dim2, dim1) * 0.01 + 0.5
-    b = np.zeros((dim2, 1))
-    return w, b
 
 '''
 n_feature = train_X.shape[0]    # 784 (28 * 28)
@@ -63,14 +25,7 @@ print(w.shape)  # 10 * n_feature
 print(b.shape)  # 10 * 1
 '''
 
-def sigmoid(x):
-    return 1. / (1 + np.exp(-x))
-
-def softmax(x):
-    z = np.exp(x)
-    z = z / np.sum(z, axis=0, keepdims=True)
-    return z
-
+'''
 def logistic_propagate(X, Y, w, b, lambd):
     m = Y.shape[-1]
     Z = np.dot(w, X) + b
@@ -87,6 +42,7 @@ def logistic_propagate(X, Y, w, b, lambd):
     grad = {'dw':dw, 'db':db}
 
     return grad, cost
+'''
 
 def softmax_propagate(X, Y, w, b, lambd):
     m = Y.shape[-1]
@@ -129,16 +85,13 @@ def init_adam(w, b):
 
     return v, s
 
-def adam_optimize(X, Y, parameters, regression='logistic', learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+def adam_optimize(X, Y, parameters, learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
     w = parameters['w']
     b = parameters['b']
     v = parameters['v']
     s = parameters['s']
 
-    if regression == 'logistic':
-        grad, cost = logistic_propagate(X, Y, w, b, lambd)
-    else:
-        grad, cost = softmax_propagate(X, Y, w, b, lambd)
+    grad, cost = softmax_propagate(X, Y, w, b, lambd)
 
     dw = grad['dw']
     db = grad['db']
@@ -207,7 +160,7 @@ def batch_gradient(X, Y, n_epoch, batch_size, learning_rate):
     return parameters, cost
 '''
 
-def batch_gradient_with_adam(X, Y, n_epoch, batch_size, learning_rate, regression, lambd):
+def batch_gradient_with_adam(X, Y, n_epoch, batch_size, learning_rate, lambd):
     m = X.shape[-1]
     n_feature = X.shape[0]
     n_output = 10
@@ -220,26 +173,13 @@ def batch_gradient_with_adam(X, Y, n_epoch, batch_size, learning_rate, regressio
         X_batches, Y_batches, n_batch = create_batch(X, Y, batch_size)
 
         for j in range(n_batch):
-            w, b, v, s, cost = adam_optimize(X_batches[j], Y_batches[j], w, b, v, s, regression, learning_rate, lambd=lambd)
+            w, b, v, s, cost = adam_optimize(X_batches[j], Y_batches[j], w, b, v, s, learning_rate, lambd=lambd)
 
         if i % 20 == 0: print('%d epoches cost: %f' % (i, cost))
 
     parameters = {'w':w, 'b':b}
     return parameters, cost
 
-def predict(X, Y, parameters):
-    m = X.shape[-1]
-
-    w = parameters['w']
-    b = parameters['b']
-    Z = np.dot(w, X) + b
-    A = sigmoid(Z)
-
-    P = np.argmax(A, axis=0)
-    correct = (P == Y)
-    accuracy = np.sum(correct) / m
-
-    return P, accuracy
 
 class SoftmaxRegression(object):
 
@@ -261,7 +201,7 @@ class SoftmaxRegression(object):
             X_batches, Y_batches, n_batch = create_batch(X, Y, self.batch_size)
 
             for j in range(n_batch):
-                self.parameters, self.cost = adam_optimize(X_batches[j], Y_batches[j], self.parameters, 'softmax', \
+                self.parameters, self.cost = adam_optimize(X_batches[j], Y_batches[j], self.parameters, \
                 self.learning_rate, self.lambd, self.beta1, self.beta2, self.epsilon)
 
             if i % 20 == 0: print('%d epoches cost: %f' % (i, self.cost))
@@ -303,17 +243,6 @@ def __main__():
 
     n_feature = train_X.shape[0]
     n_classes = 10
-
-    '''
-    #parameters, cost = batch_gradient(train_X, train_Y, n_epoch=400, batch_size=32, learning_rate=0.001)
-    parameters, cost = batch_gradient_with_adam(train_X, train_Y, n_epoch=200, batch_size=32, learning_rate=0.01, regression='logistic', lambd=0.01)
-    P, accuracy = predict(test_X, test_labels, parameters)
-    print('Logistic Regression Accuracy: %f %%' % (accuracy * 100))
-
-    parameters, cost = batch_gradient_with_adam(train_X, train_Y, n_epoch=200, batch_size=32, learning_rate=0.01, regression='softmax', lambd=0.01)
-    P, accuracy = predict(test_X, test_labels, parameters)
-    print('Softmax Regression Accuracy: %f %%' % (accuracy * 100))
-    '''
 
     softmax_model = SoftmaxRegression(n_feature, n_classes, n_epoch=400)
     softmax_model.fit(train_X, train_Y)
