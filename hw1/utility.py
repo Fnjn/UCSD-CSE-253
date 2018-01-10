@@ -52,6 +52,32 @@ def init_parameters(dim1, dim2, setZero=True):
         w = np.zeros((dim2, dim1))
     else:
         w = np.random.randn(dim2, dim1) * 0.01
-        
+
     b = np.zeros((dim2, 1))
     return w, b
+
+def create_batch(X, Y, batch_size):
+    m = X.shape[-1]
+    n_batch = int(m / batch_size)
+
+    X_batches = []
+    Y_batches = []
+
+    permutation = np.random.permutation(m)
+    X_shuffle = X[:, permutation]
+    Y_shuffle = Y[:, permutation]
+
+    for i in range(n_batch):
+        X_batch = X_shuffle[:, i * batch_size: (i+1) * batch_size]
+        Y_batch = Y_shuffle[:, i * batch_size: (i+1) * batch_size]
+        X_batches.append(X_batch)
+        Y_batches.append(Y_batch)
+
+    if m % n_batch != 0:
+        X_batch = X_shuffle[:, n_batch * batch_size:]
+        Y_batch = Y_shuffle[:, n_batch * batch_size:]
+        X_batches.append(X_batch)
+        Y_batches.append(Y_batch)
+        n_batch += 1
+
+    return X_batches, Y_batches, n_batch
