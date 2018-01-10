@@ -66,9 +66,11 @@ def sigmoid(x):
     return 1. / (1 + np.exp(-x))
 
 def softmax(x):
+    z = np.exp(x)
+    z = z / np.sum(z, axis=0, keepdims=True)
+    return z
 
-
-def logistic_propagate(X, Y, w, b, lambd=0.01):
+def logistic_propagate(X, Y, w, b, lambd):
     m = Y.shape[-1]
     Z = np.dot(w, X) + b
     A = sigmoid(Z)
@@ -85,15 +87,23 @@ def logistic_propagate(X, Y, w, b, lambd=0.01):
 
     return grad, cost
 
-def softmax_propagate(X, Y, w, b, lambd=0.01):
+def softmax_propagate(X, Y, w, b, lambd):
     m = Y.shape[-1]
     Z = np.dot(w, X) + b
-    A = np.exp(Z)
-    A = A / np.sum(A, axis=0, keepdims=True)
+    A = softmax(Z)
 
-    cost = None
-    # function not completed
+    cost = - np.sum(Y * np.log(A)) / m
+    cost += lambd * np.linalg.norm(w) / m  # L2 Regularization
+    #cost += lambd * np.linalg.norm(w, 1)    # L1 Regularization
 
+    dw = np.dot((A - Y), X.T) / m + 2 * lambd * w / m
+    db = np.sum((A - Y), axis=1, keepdims=True) / m
+
+    grad = {'dw':dw, 'db':db}
+
+    return grad, cost
+
+'''
 def optimize(X, Y, w, b, learning_rate):
     grad, cost = logistic_propagate(X, Y, w, b)
 
@@ -104,6 +114,7 @@ def optimize(X, Y, w, b, learning_rate):
     b -= learning_rate * db
 
     return w, b, cost
+'''
 
 def init_adam(w, b):
     v = {}
@@ -117,8 +128,11 @@ def init_adam(w, b):
 
     return v, s
 
-def adam_optimize(X, Y, w, b, v, s, learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
-    grad, cost = logistic_propagate(X, Y, w, b, lambd)
+def adam_optimize(X, Y, w, b, v, s, regression='logistic', learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+    if regression == 'logistic':
+        grad, cost = logistic_propagate(X, Y, w, b, lambd)
+    else:
+        grad, cost = softmax_propagate(X, Y, w, b, lambd)
 
     dw = grad['dw']
     db = grad['db']
@@ -161,6 +175,7 @@ def create_batch(X, Y, batch_size):
 
     return X_batches, Y_batches, n_batch
 
+'''
 def batch_gradient(X, Y, n_epoch, batch_size, learning_rate):
     m = X.shape[-1]
     n_feature = X.shape[0]
@@ -175,12 +190,13 @@ def batch_gradient(X, Y, n_epoch, batch_size, learning_rate):
         for j in range(n_batch):
             w, b, cost = optimize(X_batches[j], Y_batches[j], w, b, learning_rate)
 
-        print(cost)
+        if i % 20 == 0: print(i, cost)
 
     parameters = {'w':w, 'b':b}
     return parameters, cost
+'''
 
-def batch_gradient_with_adam(X, Y, n_epoch, batch_size, learning_rate, lambd):
+def batch_gradient_with_adam(X, Y, n_epoch, batch_size, learning_rate, regression, lambd):
     m = X.shape[-1]
     n_feature = X.shape[0]
     n_output = 10
@@ -193,9 +209,9 @@ def batch_gradient_with_adam(X, Y, n_epoch, batch_size, learning_rate, lambd):
         X_batches, Y_batches, n_batch = create_batch(X, Y, batch_size)
 
         for j in range(n_batch):
-            w, b, v, s, cost = adam_optimize(X_batches[j], Y_batches[j], w, b, v, s, learning_rate)
+            w, b, v, s, cost = adam_optimize(X_batches[j], Y_batches[j], w, b, v, s, regression, learning_rate, lambd=lambd)
 
-        print(cost)
+        if i % 20 == 0: print('%d epoches cost: %f' % (i, cost))
 
     parameters = {'w':w, 'b':b}
     return parameters, cost
@@ -239,8 +255,12 @@ def __main__():
     test_Y = one_hot_encoding(test_labels, 10)
 
     #parameters, cost = batch_gradient(train_X, train_Y, n_epoch=400, batch_size=32, learning_rate=0.001)
-    parameters, cost = batch_gradient_with_adam(train_X, train_Y, n_epoch=200, batch_size=32, learning_rate=0.01, lambd=0.01)
+    parameters, cost = batch_gradient_with_adam(train_X, train_Y, n_epoch=200, batch_size=32, learning_rate=0.01, regression='logistic', lambd=0.01)
     P, accuracy = predict(test_X, test_labels, parameters)
-    print('Final Accuracy: %f %%' % (accuracy * 100))
+    print('Logistic Regression Accuracy: %f %%' % (accuracy * 100))
+
+    parameters, cost = batch_gradient_with_adam(train_X, train_Y, n_epoch=200, batch_size=32, learning_rate=0.01, regression='softmax', lambd=0.01)
+    P, accuracy = predict(test_X, test_labels, parameters)
+    print('Softmax Regression Accuracy: %f %%' % (accuracy * 100))
 
 __main__()
