@@ -1,60 +1,49 @@
-\BOOKMARK [1][-]{section.1}{Derive the gradient for logistic regression}{}% 1
-\BOOKMARK [2][-]{subsection.1.1}{Problem abstract}{section.1}% 2
-\BOOKMARK [2][-]{subsection.1.2}{Further discussion}{section.1}% 3
-\BOOKMARK [3][-]{subsubsection.1.2.1}{Implementation}{subsection.1.2}% 4
-\BOOKMARK [3][-]{subsubsection.1.2.2}{Discussion}{subsection.1.2}% 5
-\BOOKMARK [3][-]{subsubsection.1.2.3}{Result}{subsection.1.2}% 6
-\BOOKMARK [2][-]{subsection.1.3}{Epilogue}{section.1}% 7
-\BOOKMARK [1][-]{section.2}{Derive the gradient for softmax regression}{}% 8
-\BOOKMARK [2][-]{subsection.2.1}{Problem abstract}{section.2}% 9
-\BOOKMARK [2][-]{subsection.2.2}{Further discussion}{section.2}% 10
-\BOOKMARK [3][-]{subsubsection.2.2.1}{Implementation}{subsection.2.2}% 11
-\BOOKMARK [3][-]{subsubsection.2.2.2}{Discussion}{subsection.2.2}% 12
-\BOOKMARK [3][-]{subsubsection.2.2.3}{Result}{subsection.2.2}% 13
-\BOOKMARK [2][-]{subsection.2.3}{Epilogue}{section.2}% 14
-\BOOKMARK [1][-]{section.3}{Read in data}{}% 15
-\BOOKMARK [2][-]{subsection.3.1}{Problem abstract}{section.3}% 16
-\BOOKMARK [2][-]{subsection.3.2}{Further discussion}{section.3}% 17
-\BOOKMARK [3][-]{subsubsection.3.2.1}{Implementation}{subsection.3.2}% 18
-\BOOKMARK [3][-]{subsubsection.3.2.2}{Discussion}{subsection.3.2}% 19
-\BOOKMARK [3][-]{subsubsection.3.2.3}{Result}{subsection.3.2}% 20
-\BOOKMARK [2][-]{subsection.3.3}{Epilogue}{section.3}% 21
-\BOOKMARK [1][-]{section.4}{Logistic regression via gradient descent}{}% 22
-\BOOKMARK [2][-]{subsection.4.1}{Problem abstract}{section.4}% 23
-\BOOKMARK [2][-]{subsection.4.2}{Further discussion}{section.4}% 24
-\BOOKMARK [3][-]{subsubsection.4.2.1}{Implementation}{subsection.4.2}% 25
-\BOOKMARK [3][-]{subsubsection.4.2.2}{Discussion}{subsection.4.2}% 26
-\BOOKMARK [3][-]{subsubsection.4.2.3}{Result}{subsection.4.2}% 27
-\BOOKMARK [2][-]{subsection.4.3}{Epilogue}{section.4}% 28
-\BOOKMARK [1][-]{section.5}{Regulation}{}% 29
-\BOOKMARK [2][-]{subsection.5.1}{Problem abstract}{section.5}% 30
-\BOOKMARK [2][-]{subsection.5.2}{Further discussion}{section.5}% 31
-\BOOKMARK [3][-]{subsubsection.5.2.1}{Implementation}{subsection.5.2}% 32
-\BOOKMARK [3][-]{subsubsection.5.2.2}{Discussion}{subsection.5.2}% 33
-\BOOKMARK [3][-]{subsubsection.5.2.3}{Result}{subsection.5.2}% 34
-\BOOKMARK [2][-]{subsection.5.3}{Epilogue}{section.5}% 35
-\BOOKMARK [1][-]{section.6}{Softmax regression via gradient descent}{}% 36
-\BOOKMARK [2][-]{subsection.6.1}{Problem abstract}{section.6}% 37
-\BOOKMARK [2][-]{subsection.6.2}{Further discussion}{section.6}% 38
-\BOOKMARK [3][-]{subsubsection.6.2.1}{Implementation}{subsection.6.2}% 39
-\BOOKMARK [3][-]{subsubsection.6.2.2}{Discussion}{subsection.6.2}% 40
-\BOOKMARK [3][-]{subsubsection.6.2.3}{Result}{subsection.6.2}% 41
-\BOOKMARK [2][-]{subsection.6.3}{Epilogue}{section.6}% 42
-\BOOKMARK [1][-]{section.7}{Summary}{}% 43
-\BOOKMARK [1][-]{section.8}{Contributions}{}% 44
-\BOOKMARK [1][-]{section.9}{References}{}% 45
-\BOOKMARK [1][-]{section.10}{Submission of papers to NIPS 2017}{}% 46
-\BOOKMARK [2][-]{subsection.10.1}{Style}{section.10}% 47
-\BOOKMARK [2][-]{subsection.10.2}{Retrieval of style files}{section.10}% 48
-\BOOKMARK [1][-]{section.11}{General formatting instructions}{}% 49
-\BOOKMARK [1][-]{section.12}{Headings: first level}{}% 50
-\BOOKMARK [2][-]{subsection.12.1}{Headings: second level}{section.12}% 51
-\BOOKMARK [3][-]{subsubsection.12.1.1}{Headings: third level}{subsection.12.1}% 52
-\BOOKMARK [1][-]{section.13}{Citations, figures, tables, references}{}% 53
-\BOOKMARK [2][-]{subsection.13.1}{Citations within the text}{section.13}% 54
-\BOOKMARK [2][-]{subsection.13.2}{Footnotes}{section.13}% 55
-\BOOKMARK [2][-]{subsection.13.3}{Figures}{section.13}% 56
-\BOOKMARK [2][-]{subsection.13.4}{Tables}{section.13}% 57
-\BOOKMARK [1][-]{section.14}{Final instructions}{}% 58
-\BOOKMARK [1][-]{section.15}{Preparing PDF files}{}% 59
-\BOOKMARK [2][-]{subsection.15.1}{Margins in LaTeX}{section.15}% 60
+\BOOKMARK [1][-]{section.1}{Derive the gradient}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Derive the gradient for logistic regression}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{Derive the gradient for softmax regression}{section.1}% 3
+\BOOKMARK [1][-]{section.2}{Read in data}{}% 4
+\BOOKMARK [2][-]{subsection.2.1}{Problem abstract}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.2}{Further discussion}{section.2}% 6
+\BOOKMARK [3][-]{subsubsection.2.2.1}{Implementation}{subsection.2.2}% 7
+\BOOKMARK [3][-]{subsubsection.2.2.2}{Discussion}{subsection.2.2}% 8
+\BOOKMARK [3][-]{subsubsection.2.2.3}{Result}{subsection.2.2}% 9
+\BOOKMARK [2][-]{subsection.2.3}{Epilogue}{section.2}% 10
+\BOOKMARK [1][-]{section.3}{Logistic regression via gradient descent}{}% 11
+\BOOKMARK [2][-]{subsection.3.1}{Problem abstract}{section.3}% 12
+\BOOKMARK [2][-]{subsection.3.2}{Further discussion}{section.3}% 13
+\BOOKMARK [3][-]{subsubsection.3.2.1}{Implementation}{subsection.3.2}% 14
+\BOOKMARK [3][-]{subsubsection.3.2.2}{Discussion}{subsection.3.2}% 15
+\BOOKMARK [3][-]{subsubsection.3.2.3}{Result}{subsection.3.2}% 16
+\BOOKMARK [2][-]{subsection.3.3}{Epilogue}{section.3}% 17
+\BOOKMARK [1][-]{section.4}{Regulation}{}% 18
+\BOOKMARK [2][-]{subsection.4.1}{Problem abstract}{section.4}% 19
+\BOOKMARK [2][-]{subsection.4.2}{Further discussion}{section.4}% 20
+\BOOKMARK [3][-]{subsubsection.4.2.1}{Implementation}{subsection.4.2}% 21
+\BOOKMARK [3][-]{subsubsection.4.2.2}{Discussion}{subsection.4.2}% 22
+\BOOKMARK [3][-]{subsubsection.4.2.3}{Result}{subsection.4.2}% 23
+\BOOKMARK [2][-]{subsection.4.3}{Epilogue}{section.4}% 24
+\BOOKMARK [1][-]{section.5}{Softmax regression via gradient descent}{}% 25
+\BOOKMARK [2][-]{subsection.5.1}{Problem abstract}{section.5}% 26
+\BOOKMARK [2][-]{subsection.5.2}{Further discussion}{section.5}% 27
+\BOOKMARK [3][-]{subsubsection.5.2.1}{Implementation}{subsection.5.2}% 28
+\BOOKMARK [3][-]{subsubsection.5.2.2}{Discussion}{subsection.5.2}% 29
+\BOOKMARK [3][-]{subsubsection.5.2.3}{Result}{subsection.5.2}% 30
+\BOOKMARK [2][-]{subsection.5.3}{Epilogue}{section.5}% 31
+\BOOKMARK [1][-]{section.6}{Summary}{}% 32
+\BOOKMARK [1][-]{section.7}{Contributions}{}% 33
+\BOOKMARK [1][-]{section.8}{References}{}% 34
+\BOOKMARK [1][-]{section.9}{Submission of papers to NIPS 2017}{}% 35
+\BOOKMARK [2][-]{subsection.9.1}{Style}{section.9}% 36
+\BOOKMARK [2][-]{subsection.9.2}{Retrieval of style files}{section.9}% 37
+\BOOKMARK [1][-]{section.10}{General formatting instructions}{}% 38
+\BOOKMARK [1][-]{section.11}{Headings: first level}{}% 39
+\BOOKMARK [2][-]{subsection.11.1}{Headings: second level}{section.11}% 40
+\BOOKMARK [3][-]{subsubsection.11.1.1}{Headings: third level}{subsection.11.1}% 41
+\BOOKMARK [1][-]{section.12}{Citations, figures, tables, references}{}% 42
+\BOOKMARK [2][-]{subsection.12.1}{Citations within the text}{section.12}% 43
+\BOOKMARK [2][-]{subsection.12.2}{Footnotes}{section.12}% 44
+\BOOKMARK [2][-]{subsection.12.3}{Figures}{section.12}% 45
+\BOOKMARK [2][-]{subsection.12.4}{Tables}{section.12}% 46
+\BOOKMARK [1][-]{section.13}{Final instructions}{}% 47
+\BOOKMARK [1][-]{section.14}{Preparing PDF files}{}% 48
+\BOOKMARK [2][-]{subsection.14.1}{Margins in LaTeX}{section.14}% 49

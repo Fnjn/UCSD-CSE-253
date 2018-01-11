@@ -21,6 +21,9 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 
+\usepackage{amsmath}
+\usepackage{amssymb}
+
 \title{CSE 253 Programming Assignment 1 -- Logistic \& Softmax Regression}
 
 % The \author macro works with any number of authors. There are two
@@ -74,22 +77,30 @@
   one paragraph.
 \end{abstract}
 
-\section{Derive the gradient for logistic regression}
-\subsection{Problem abstract}
-\subsection{Further discussion}
-\subsubsection{Implementation}
-\subsubsection{Discussion}
-\subsubsection{Result}
-\subsection{Epilogue}
+\section{Derive the gradient}
+\subsection{Derive the gradient for logistic regression}
+\begin{equation*}
+\begin{gathered}
+	E = - \sum_{n=1}^{N}{t^n\ln y^n + (1+t^n) \ln (1-y^n)} \\
+	y^n = g_w(x) = \frac{1}{1 + \exp(-w^Tx^n)}\\
+	\\
+	\frac{\partial E}{\partial y^n} = \frac{1-t^n}{1-y^n}- \frac{t^n}{y^n} = \frac{y^n - t^n}{y^n(1-y^n)}\\
+	\frac{\partial y^n}{\partial w} = g_w(x^n) (1-g_w(x^n)) x^n\\
+	\\
+	\frac{\partial E}{\partial w} = \frac{\partial E}{\partial y^n} \frac{\partial y^n}{\partial w} = (y^n - t^n) x^n	\quad\blacksquare
+\end{gathered}
+\end{equation*}
 
 
-\section{Derive the gradient for softmax regression}
-\subsection{Problem abstract}
-\subsection{Further discussion}
-\subsubsection{Implementation}
-\subsubsection{Discussion}
-\subsubsection{Result}
-\subsection{Epilogue}
+\subsection{Derive the gradient for softmax regression}
+\begin{equation*}
+\begin{gathered}
+	E = - \sum_m \sum_{k=1}^{c} t_k^n \ln y_k^n \\
+	y_k^n = \frac{\exp (a_k^n)}{\sum_{k'} \exp(a_{k'}^n)} \\
+	a_n^k = w_k^T x^n \\
+	\\ not completed here
+\end{gathered}
+\end{equation*}
 
 \section{Read in data}
 \subsection{Problem abstract}
