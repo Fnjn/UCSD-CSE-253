@@ -1,16 +1,6 @@
 \documentclass{article}
 
-% if you need to pass options to natbib, use, e.g.:
-% \PassOptionsToPackage{numbers, compress}{natbib}
-% before loading nips_2017
-%
-% to avoid loading the natbib package, add option nonatbib:
-% \usepackage[nonatbib]{nips_2017}
-
-\usepackage{nips_2017}
-
-% to compile a camera-ready version, add the [final] option, e.g.:
-% \usepackage[final]{nips_2017}
+\usepackage[final]{nips_2017}
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
@@ -26,45 +16,19 @@
 
 \title{CSE 253 Programming Assignment 1 -- Logistic \& Softmax Regression}
 
-% The \author macro works with any number of authors. There are two
-% commands used to separate the names and addresses of multiple
-% authors: \And and \AND.
-%
-% Using \And between authors leaves it to LaTeX to determine where to
-% break the lines. Using \AND forces a line break at that point. So,
-% if LaTeX puts 3 of 4 authors names on the first line, and the last
-% on the second line, try using \AND instead of \And before the third
-% author name.
-
 \author{
   Fanjin Zeng \\
-  Department of Computer Science\\
+  Computer Science and Engineering\\
   University of Califorina, San Diego\\
   \texttt{f1zeng@ucsd.edu} \\
-  %% examples of more authors
    \And
    Xinyue Ou \\
+   Computer Science and Engineering\\
    University of Califorina, San Diego \\
    \texttt{email} \\
-  %% \AND
-  %% Coauthor \\
-  %% Affiliation \\
-  %% Address \\
-  %% \texttt{email} \\
-  %% \And
-  %% Coauthor \\
-  %% Affiliation \\
-  %% Address \\
-  %% \texttt{email} \\
-  %% \And
-  %% Coauthor \\
-  %% Affiliation \\
-  %% Address \\
-  %% \texttt{email} \\
 }
 
 \begin{document}
-% \nipsfinalcopy is no longer used
 
 \maketitle
 
@@ -77,8 +41,7 @@
   one paragraph.
 \end{abstract}
 
-\section{Derive the gradient}
-\subsection{Derive the gradient for logistic regression}
+\section{Derive the gradient for logistic regression}
 \begin{equation*}
 \begin{gathered}
 	E = - \sum_{n=1}^{N}{t^n\ln y^n + (1+t^n) \ln (1-y^n)} \\
@@ -92,14 +55,40 @@
 \end{equation*}
 
 
-\subsection{Derive the gradient for softmax regression}
+\section{Derive the gradient for softmax regression}
 \begin{equation*}
 \begin{gathered}
 	E = - \sum_m \sum_{k=1}^{c} t_k^n \ln y_k^n \\
 	y_k^n = \frac{\exp (a_k^n)}{\sum_{k'} \exp(a_{k'}^n)} \\
-	a_n^k = w_k^T x^n \\
-	\\ not completed here
+	a_n^k = w_k^T x^n
 \end{gathered}
+\end{equation*}
+
+\begin{equation*}
+\begin{gathered}
+	\frac{\partial y_k^n}{\partial a_k^n} = y_k^n (1 - y_k^n) \\
+	\frac{\partial y_k^n}{\partial a_{k''}^n} = - y_k^n y_{k''}^n \quad (k'' \ne k) 
+\end{gathered}
+\end{equation*}
+
+\begin{equation*}
+\begin{split}
+	\frac{\partial E}{\partial a_n^k} &= - \sum_{k=1}^{c} t_k^n \frac{1}{y_k^n} \frac{\partial y_k^n}{\partial a_k^n}  \\
+	&= -t_k^n + t_k^n y_k^n + \sum_{k' \ne k} y_k^n t_{k'}^n\\
+	&= y_k^n \sum_{k'}t_{k'}^n - t_k^n \\
+	&= y_k^n - t_k^n
+\end{split}
+\end{equation*}
+
+\begin{equation*}
+	\dfrac{\mathrm{d} a_k^n}{\mathrm{d} w_{jk}} = x_j^n
+\end{equation*}
+
+\begin{equation*}
+\begin{split}
+	\frac{\partial E}{\partial w_{jk}} &= \frac{\partial E}{\partial a_n^k} \frac{\partial a_k^n}{\partial w_{jk}} \\
+	&= (y_k^n - t_k^n) x_j^n \quad\blacksquare
+\end{split}
 \end{equation*}
 
 \section{Read in data}
