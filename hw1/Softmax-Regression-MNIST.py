@@ -114,10 +114,13 @@ class SoftmaxRegression(object):
 
 
 def __main__():
-    train_images = load_mnist_images('train-images.idx3-ubyte', 2000)
-    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 2000)
-    test_images = load_mnist_images('t10k-images.idx3-ubyte', 200)
-    test_labels = load_mnist_labels('t10k-labels.idx1-ubyte', 200)
+    train_images = load_mnist_images('train-images.idx3-ubyte', 20000)
+    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 20000)
+    test_images = load_mnist_images('t10k-images.idx3-ubyte')
+    test_labels = load_mnist_labels('t10k-labels.idx1-ubyte')
+
+    test_images = test_images[-2000:]
+    test_labels = test_labels[-2000:]
 
     '''
     # Show A Image
@@ -140,7 +143,7 @@ def __main__():
 
     softmax_model = SoftmaxRegression(n_feature, n_classes, n_epoch=400)
     softmax_model.fit(train_X, train_Y)
-    softmax_model.predict(test_X, test_Y)
+    softmax_model.predict(test_X, test_labels)
     print('Softmax Regression Accuracy: %f %%' % (softmax_model.accuracy * 100))
 
 __main__()

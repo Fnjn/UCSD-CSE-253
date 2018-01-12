@@ -9,13 +9,15 @@ from utility import load_mnist_images, load_mnist_labels, sigmoid, \
 init_parameters, create_batch
 
 
-def extract_target_data(X, Y, target):
-    p = (Y == target)
-    return X[p], Y[p]
-
-def extract_target_label(Y, target):
-    Y_t = (Y == target)
-    return np.expand_dims(Y_t, axis=0)
+def extract_target_data(X, Y, target1, target2):
+    p1 = (Y == target1)
+    p2 = (Y == target2)
+    p = p1 | p2
+    x_target = X[:,p]
+    y_target = Y[p]
+    y_target = (y_target == target1)
+    y_target = np.expand_dims(y_target, axis=0)
+    return x_target, y_target
 
 def logistic_propagate(X, Y, w, b, lambd):
     m = Y.shape[-1]
@@ -77,10 +79,13 @@ class LogisticRegression(object):
         self.accuracy = np.sum(correct) / m
 
 def __main__():
-    train_images = load_mnist_images('train-images.idx3-ubyte', 2000)
-    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 2000)
-    test_images = load_mnist_images('t10k-images.idx3-ubyte', 200)
-    test_labels = load_mnist_labels('t10k-labels.idx1-ubyte', 200)
+    train_images = load_mnist_images('train-images.idx3-ubyte', 20000)
+    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 20000)
+    test_images = load_mnist_images('t10k-images.idx3-ubyte')
+    test_labels = load_mnist_labels('t10k-labels.idx1-ubyte')
+
+    test_images = test_images[-2000:]
+    test_labels = test_labels[-2000:]
 
     '''
     # Show A Image
@@ -94,16 +99,14 @@ def __main__():
     train_X = train_images.reshape(m_train, -1).T / 255.
     test_X = test_images.reshape(m_test, -1).T / 255.
 
-    train_X_2 = train_X
-    train_Y_2 = extract_target_label(train_labels, 2)
-    test_X_2 = test_X
-    test_Y_2 = extract_target_label(test_labels, 2)
+    train_X, train_Y = extract_target_data(train_X, train_labels, 2, 3)
+    test_X, test_Y = extract_target_data(test_X, test_labels, 2, 3)
 
     n_feature = train_X.shape[0]
 
     sigmoid_2_model = LogisticRegression(n_feature, n_epoch=400)
-    sigmoid_2_model.fit(train_X_2, train_Y_2)
-    sigmoid_2_model.predict(test_X_2, test_Y_2)
-    print('Softmax Regression on Category 2 Accuracy: %f %%' % (sigmoid_2_model.accuracy * 100))
+    sigmoid_2_model.fit(train_X, train_Y)
+    sigmoid_2_model.predict(test_X, test_Y)
+    print('Softmax Regression on Category 2 and 3 Accuracy: %f %%' % (sigmoid_2_model.accuracy * 100))
 
 __main__()
