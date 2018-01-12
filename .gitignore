@@ -11,6 +11,7 @@ __pycache__/
 *.out
 *.log
 *.pdf
+*.synctex.gz
 
 # Distribution / packaging
 .Python
