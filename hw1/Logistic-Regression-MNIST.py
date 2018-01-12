@@ -19,15 +19,22 @@ def extract_target_data(X, Y, target1, target2):
     y_target = np.expand_dims(y_target, axis=0)
     return x_target, y_target
 
+def compute_cost(Y, A, m, w, lambd, regularized=0):
+    cost =  - np.sum(Y * np.log(A) + (1-Y) * np.log(1-A)) / m
+    if regularized == 1:
+            cost += lambd * np.linalg.norm(w, 1)
+    elif regularized == 2:
+            cost += lambd * np.linalg.norm(w) / m
+
+    return cost
+
+
 def logistic_propagate(X, Y, w, b, lambd):
     m = Y.shape[-1]
     Z = np.dot(w, X) + b
     A = sigmoid(Z)
 
-    cost = - np.sum(Y * np.log(A) + (1-Y) * np.log(1-A)) / m
-
-    cost += lambd * np.linalg.norm(w) / m  # L2 Regularization
-    #cost += lambd * np.linalg.norm(w, 1)    # L1 Regularization
+    cost = compute_cost(Y, A, m, w, lambd, 2)
 
     dw = np.dot((A - Y), X.T) / m + 2 * lambd * w / m
     db = np.sum((A - Y), axis=1, keepdims=True) / m
@@ -60,13 +67,26 @@ class LogisticRegression(object):
         self.cost = -1.
 
     def fit(self, X, Y):
+        train_cost = []
+        val_cost = []
+
         for i in range(self.n_epoch):
             X_batches, Y_batches, n_batch = create_batch(X, Y, self.batch_size)
-
-            for j in range(n_batch):
+            holdout = max(1,n_batch/10)
+            for j in range(holdout, n_batch):
                 self.w, self.b, self.cost = optimize(X_batches[j], Y_batches[j], self.w, self.b, self.learning_rate, self.lambd)
 
+            train_cost.append(self.cost)
+
+            holdoutX = np.concatenate(X_batches[:holdout], axis=1)
+            holdoutY = np.concatenate(np.concatenate(Y_batches[:holdout], axis=0))
+            m = holdoutY.shape[-1]
+            Z = np.dot(self.w, holdoutX) + self.b
+            A = sigmoid(Z)
+            val_cost.append(compute_cost(holdoutY, A, m, self.w, self.lambd, 2))
+
             if i % 20 == 0: print('%d epoches cost: %f' % (i, self.cost))
+        return train_cost, val_cost
 
     def predict(self, X, Y):
         m = X.shape[-1]
@@ -76,7 +96,8 @@ class LogisticRegression(object):
 
         self.Y_p = (A > 0.5)
         correct = (self.Y_p == Y)
-        self.accuracy = np.sum(correct) / m
+        self.accuracy = np.sum(correct)*1.0 / m
+
 
 def __main__():
     train_images = load_mnist_images('train-images.idx3-ubyte', 20000)
@@ -105,8 +126,12 @@ def __main__():
     n_feature = train_X.shape[0]
 
     sigmoid_2_model = LogisticRegression(n_feature, n_epoch=400)
-    sigmoid_2_model.fit(train_X, train_Y)
+    train_cost, val_cost = sigmoid_2_model.fit(train_X, train_Y)
     sigmoid_2_model.predict(test_X, test_Y)
     print('Softmax Regression on Category 2 and 3 Accuracy: %f %%' % (sigmoid_2_model.accuracy * 100))
 
+    tc_plt, = plt.plot(train_cost, label='Training Cost')
+    vc_plt, = plt.plot(val_cost, label='Validating Cost')
+    plt.legend(handles=[tc_plt, vc_plt])
+    plt.show()
 __main__()

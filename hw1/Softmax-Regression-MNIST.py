@@ -110,7 +110,7 @@ class SoftmaxRegression(object):
 
         self.Y_p = np.argmax(A, axis=0)
         correct = (self.Y_p == Y)
-        self.accuracy = np.sum(correct) / m
+        self.accuracy = np.sum(correct)*1.0 / m
 
 
 def __main__():
