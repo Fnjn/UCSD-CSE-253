@@ -62,6 +62,7 @@ def optimize(X, Y, w, b, learning_rate, lambd):
 
 class LogisticRegression(object):
 
+
     def __init__(self, n_feature, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01):
         self.n_epoch = n_epoch
         self.batch_size = batch_size
@@ -118,8 +119,8 @@ class LogisticRegression(object):
 
 
 def __main__():
-    train_images = load_mnist_images('train-images.idx3-ubyte', 20000)
-    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 20000)
+    train_images = load_mnist_images('train-images.idx3-ubyte', 2000)
+    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 2000)
     test_images = load_mnist_images('t10k-images.idx3-ubyte')
     test_labels = load_mnist_labels('t10k-labels.idx1-ubyte')
 
@@ -161,5 +162,10 @@ def __main__():
     ax2.legend(handles=[ta_plt, va_plt, tea_plt], loc=4)
     plt.show()
 
+
+    fig2 = plt.figure()
+    ax3 = fig2.add_subplot(111)
+    ax3.imshow(sigmoid_2_model.w.reshape(28,28))
+    plt.show()
 
 __main__()
