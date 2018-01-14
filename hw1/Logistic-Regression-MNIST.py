@@ -26,9 +26,9 @@ def compute_cost(X, Y, w, b, lambd, regularized=0):
     cost =  - np.sum(Y * np.log(A) + (1-Y) * np.log(1-A)) / m
 
     if regularized == 1:
-            cost += lambd * np.linalg.norm(w, 1)
+            cost += lambd * np.linalg.norm(w, 1) / m
     elif regularized == 2:
-            cost += lambd * np.linalg.norm(w) / m
+            cost += lambd * np.linalg.norm(w, 2)
 
     return cost
 
@@ -114,13 +114,13 @@ class LogisticRegression(object):
 
         self.Y_p = (A > 0.5)
         correct = (self.Y_p == Y)
-        self.accuracy = np.sum(correct)*1.0 / m
+        self.accuracy = np.sum(correct) / m
         return self.accuracy
 
 
 def __main__():
-    train_images = load_mnist_images('train-images.idx3-ubyte', 2000)
-    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 2000)
+    train_images = load_mnist_images('train-images.idx3-ubyte', 20000)
+    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 20000)
     test_images = load_mnist_images('t10k-images.idx3-ubyte')
     test_labels = load_mnist_labels('t10k-labels.idx1-ubyte')
 
