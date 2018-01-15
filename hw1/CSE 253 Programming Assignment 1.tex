@@ -10,7 +10,7 @@
 \usepackage{amsfonts}       % blackboard math symbols
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
-
+\usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
 
@@ -25,7 +25,7 @@
    Xinyue Ou \\
    Computer Science and Engineering\\
    University of Califorina, San Diego \\
-   \texttt{email} \\
+   \texttt{x1ou@ucsd.edu} \\
 }
 
 \begin{document}
@@ -92,12 +92,9 @@
 \end{equation*}
 
 \section{Read in data}
-\subsection{Problem abstract}
-\subsection{Further discussion}
-\subsubsection{Implementation}
-\subsubsection{Discussion}
-\subsubsection{Result}
-\subsection{Epilogue}
+After getting the dataset from \href{http://yann.lecun.com/exdb/mnist/}{this page}, we read it into our program by unpacking it to desired structure. For image data, the first 16 bytes are the magic number, the size, the row and the column, followed by the actual data. For the label data, the first 8 bytes are the magic number and the size.
+
+We use the first 20,000 training images and the first 2,000 testing images.
 
 \section{Logistic regression via gradient descent}
 \subsection{Problem abstract}
@@ -109,12 +106,41 @@
 
 \section{Regulation}
 \subsection{Problem abstract}
-\subsection{Further discussion}
-\subsubsection{Implementation}
-\subsubsection{Discussion}
-\subsubsection{Result}
-\subsection{Epilogue}
+Sometimes the regression model suffers from over fit, which reduces the generalization of the model. This can be improved by introducing regularization part to the loss function. With the cost function becoming \begin{align*}
+J(w) = E(w) + \lambda C(w)
+\end{align*}
+ the loss function is penalized by the complexity of model parametrized by value $\lambda$. There are two major forms of regularization. 
+ 
+ $L_1:$\begin{align*}
+  C(w) = ||w||
+  \end{align*}
+ $L_2:$\begin{align*}
+ C(w) = ||w||^2
+ \end{align*}
 
+\subsubsection*{(a)} 
+To derive the gradient descent of the two types of regularizations, we have 
+
+$L_1$: \begin{align*}
+\frac{d}{dw_j}C(w) = sgn(w_j) 
+\end{align*}
+$L_2$: \begin{align*}
+\frac{d}{dw_j}C(w) = 2w_j 
+\end{align*}
+\subsubsection*{(b)} 
+To figure out the best $\lambda$ to regularize the weight, we train our model against the lambda value of 0.0001, 0.001, 0.01, 0.1 and 1, and two types of regularization respectively.
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale = 0.7]{lambdaR1.png}
+	\caption{L1 regularization. Model accuracy vs training epochs, with different values of lambda}
+\end{figure}
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale = 0.7]{lambda1.png}
+	\caption{L2 regularization. Model accuracy vs training epochs, with different values of lambda}
+\end{figure}
+
+It is observed that the difference of lambda does not pose significant difference  on the model accuracy. 
 \section{Softmax regression via gradient descent}
 \subsection{Problem abstract}
 \subsection{Further discussion}
