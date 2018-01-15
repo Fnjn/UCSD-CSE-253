@@ -131,16 +131,59 @@ $L_2$: \begin{align*}
 To figure out the best $\lambda$ to regularize the weight, we train our model against the lambda value of 0.0001, 0.001, 0.01, 0.1 and 1, and two types of regularization respectively.
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale = 0.7]{lambdaR1.png}
+	\includegraphics[scale = 0.7]{lambda_train_1.png}
 	\caption{L1 regularization. Model accuracy vs training epochs, with different values of lambda}
 \end{figure}
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale = 0.7]{lambda1.png}
+	\includegraphics[scale = 0.7]{lambda_train_2.png}
 	\caption{L2 regularization. Model accuracy vs training epochs, with different values of lambda}
 \end{figure}
 
-It is observed that the difference of lambda does not pose significant difference  on the model accuracy. 
+From the figures we can observe, as lambda increases, the accuracy of training set decreases. It actually coincides with the intention to use regularization to penalize the overfitting of training set. As more regularization put on the training set, the model will not train into a state that over compliments the training data. Therefore it should not fit the training data that much when lambda goes up.
+
+We also observe that the L1 regularization poses more penalty than the L2. It may be due to the fact that the absolute value of most of the weights here are far less than 1, making L1 regularization has a more significant effect than L2.
+\subsubsection*{(c)}
+To see the actual effect that regularization poses on weight, we plot the 2-norm of the weight versus the values of lambda. As observed, the weight keeps going down as the lambda goes up. It makes sense since the increase of lambda poses more penalty on the weight to keep the model free from large weights. 
+
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{weight_1.png}
+		\caption{L1 regularization. Weight vector vs lambda}
+	\end{minipage}\hfill
+	\begin {minipage}{0.48\textwidth}
+	\centering
+		\includegraphics[width=\textwidth]{weight_2.png}
+		\caption{L2 regularization.  Weight vector vs lambda}
+\end{minipage}
+\end{figure}
+\subsubsection*{(d)}
+We then want to check the practical values of using regularization. By testing the regularized model on the testing data, we obtain the error rate of the model respectively for L1 and L2 regularization.
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+	\includegraphics[width=\textwidth]{lambda_test_1.png}
+	\caption{L1 regularization. Test error versus lambda}
+	\end{minipage}\hfill
+	\begin {minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{lambda_test_2.png}
+	\caption{L2 regularization. Test error versus lambda}
+\end{minipage}
+\end{figure}
+
+
+As we can observed, the best lambda for L1 regularization is when $\lambda = 10^{-2}$, and $\lambda < 10^{-1}$ for L2. It makes sense that the regularization first helps with the generalization of the model that it prevents overfitting on the training data. Hence the error on the test set goes down when lambda goes up. Nonetheless, the increasing of lambda also impedes the pace of gradient descent that makes the model become under-trained. Hence we can observe an increase in error when lambda keeps going up.
+
+The best lambda for our model is $\lambda=10^{-2}$ 
+\subsubsection*{(e)}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{weight_img.png}
+	\caption{Weight images with different lambda. Lambda increases from left to right}
+\end{figure}
+Through the weight images, we can observe that with higher lambda, the weight image is actually more blurred than the one with lower lambda. There are mode granule details in images with lower lambda. This is may because the weights in lower lambda image can grow more freely than the one with higher lambda.
 \section{Softmax regression via gradient descent}
 \subsection{Problem abstract}
 \subsection{Further discussion}
