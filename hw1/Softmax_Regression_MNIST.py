@@ -18,26 +18,33 @@ print(test_Y.shape) # 10 * m_test
 print(w.shape)  # 10 * n_feature
 print(b.shape)  # 10 * 1
 '''
-def compute_cost(X, Y, w, b, lambd, regularized=2):
+def compute_cost(X, Y, w, b, lambd, regularized):
     m = Y.shape[-1]
     Z = np.dot(w, X) + b
     A = softmax(Z)
     cost = - np.sum(Y * np.log(A)) / m
-    cost += lambd * np.linalg.norm(w) / m  # L2 Regularization
+
+    if regularized == 1:
+        cost += lambd * np.linalg.norm(w, 1) / m # L1 Regularization
+    elif regularized == 2:
+        cost += lambd * np.linalg.norm(w) / m  # L2 Regularization
 
     return cost
 
-def softmax_propagate(X, Y, w, b, lambd):
+def softmax_propagate(X, Y, w, b, lambd, regularized):
     m = Y.shape[-1]
     Z = np.dot(w, X) + b
     A = softmax(Z)
 
-    cost = - np.sum(Y * np.log(A)) / m
-    cost += lambd * np.linalg.norm(w) / m  # L2 Regularization
-    #cost += lambd * np.linalg.norm(w, 1)    # L1 Regularization
+    cost = compute_cost(X, Y, w, b, lambd, regularized)
 
     dw = np.dot((A - Y), X.T) / m + 2 * lambd * w / m
     db = np.sum((A - Y), axis=1, keepdims=True) / m
+
+    if regularized == 2:
+        dw += 2 * lambd * w / m
+    elif regularized == 1:
+        dw += lambd * np.sign(w) / m
 
     grad = {'dw':dw, 'db':db}
 
@@ -55,13 +62,13 @@ def init_adam(w, b):
 
     return v, s
 
-def adam_optimize(X, Y, parameters, learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+def adam_optimize(X, Y, parameters, learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8), regularized=2):
     w = parameters['w']
     b = parameters['b']
     v = parameters['v']
     s = parameters['s']
 
-    grad, cost = softmax_propagate(X, Y, w, b, lambd)
+    grad, cost = softmax_propagate(X, Y, w, b, lambd, regularized)
 
     dw = grad['dw']
     db = grad['db']
@@ -120,7 +127,7 @@ class SoftmaxRegression(object):
 
             for j in range(n_batch):
                 self.parameters, self.cost = adam_optimize(X_batches[j], Y_batches[j], self.parameters, \
-                self.learning_rate, self.lambd, self.beta1, self.beta2, self.epsilon)
+                self.learning_rate, self.lambd, self.beta1, self.beta2, self.epsilon, self.regularized)
 
             self.learning_rate /= 1. + self.T
 
@@ -131,7 +138,7 @@ class SoftmaxRegression(object):
                 train['accuracy'].append(trainAcc)
 
                 if holdout_X is not None:
-                    valCost = compute_cost(holdout_X, holdout_Y, self.w, self.b, self.lambd, self.regularized)
+                    valCost = compute_cost(holdout_X, holdout_Y, self.parameters['w'], self.parameters['b'], self.lambd, self.regularized)
                     valAcc = self.predict(holdout_X, holdout_Y)
                     val['cost'].append(valCost)
                     val['accuracy'].append(valAcc)
@@ -141,7 +148,7 @@ class SoftmaxRegression(object):
                         break
 
                 if test_X is not None:
-                    testCost = compute_cost(test_X, test_Y, self.w, self.b, self.lambd, self.regularized)
+                    testCost = compute_cost(test_X, test_Y, self.parameters['w'], self.parameters['b'], self.lambd, self.regularized)
                     testAcc = self.predict(test_X, test_Y)
                     test['cost'].append(testCost)
                     test['accuracy'].append(testAcc)
@@ -168,66 +175,3 @@ class SoftmaxRegression(object):
         self.accuracy = np.sum(correct)/ m
 
         return self.accuracy
-
-
-def __main__():
-    train_images = load_mnist_images('train-images.idx3-ubyte', 20000)
-    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 20000)
-    test_images = load_mnist_images('t10k-images.idx3-ubyte')
-    test_labels = load_mnist_labels('t10k-labels.idx1-ubyte')
-
-    test_images = test_images[-2000:]
-    test_labels = test_labels[-2000:]
-
-    '''
-    # Show A Image
-    plt.gray()
-    plt.imshow(train_images[50])
-    plt.show()
-    '''
-
-    m_train = train_images.shape[0]
-    m_test = test_images.shape[0]
-    train_X = train_images.reshape(m_train, -1).T / 255.
-    test_X = test_images.reshape(m_test, -1).T / 255.
-
-
-    train_Y = one_hot_encoding(train_labels, 10)
-    test_Y = one_hot_encoding(test_labels, 10)
-
-    n_feature = train_X.shape[0]
-    n_classes = 10
-    #
-    # softmax_model = SoftmaxRegression(n_feature, n_classes, n_epoch=400)
-    # softmax_model.fit(train_X, train_Y)
-    # softmax_model.predict(test_X, test_labels)
-    # print('Softmax Regression Accuracy: %f %%' % (softmax_model.accuracy * 100))
-
-    softmax_model = SoftmaxRegression(n_feature, n_classes, n_epoch=400)
-    train, val, test = softmax_model.fit(train_X, train_Y, test_X=test_X, test_Y=test_Y)
-    softmax_model.predict(test_X, test_Y)
-    print('Softmax Regression Accuracy: %f %%' % (softmax_model.accuracy * 100))
-
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(211)
-    tc_plt, = ax1.plot(train['cost'], label='Training Cost')
-    vc_plt, = ax1.plot(val['cost'], label='Validation Cost')
-    tec_plt, =  ax1.plot(test['cost'], label='Test Cost')
-    ax1.legend(handles=[tc_plt, vc_plt, tec_plt])
-    ax2 = fig1.add_subplot(212)
-    ta_plt, = ax2.plot(train['accuracy'], label='Training Accuracy')
-    va_plt, = ax2.plot(val['accuracy'], label='Validating Accuracy')
-    tea_plt, =  ax2.plot(test['accuracy'], label='Test Accuracy')
-    ax2.legend(handles=[ta_plt, va_plt, tea_plt], loc=4)
-    plt.show()
-
-
-    fig2 = plt.figure()
-    plt.gray()
-
-    for i in range(10):
-        ax3 = fig2.add_subplot(2, 5, i+1)
-        ax3.imshow(softmax_model.parameters['w'][i].reshape(28,28))
-    plt.show()
-
-#__main__()
