@@ -42,6 +42,15 @@ def extract_target_data(X, Y, target1, target2):
     y_target = np.expand_dims(y_target, axis=0)
     return x_target, y_target
 
+def split_holdout(X, Y, holdout_ratio):
+    m = X.shape[-1]
+    permutation = np.random.permutation(m)
+    X_shuffle = X[:, permutation]
+    Y_shuffle = Y[:, permutation]
+    m_holdout = int(m * holdout_ratio)
+    return X[:,:-m_holdout], Y[:,:-m_holdout], X[:,-m_holdout:], Y[:,-m_holdout:]
+
+
 def sigmoid(x):
     return 1. / (1 + np.exp(-x))
 

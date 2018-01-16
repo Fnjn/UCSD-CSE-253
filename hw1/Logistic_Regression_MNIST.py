@@ -6,7 +6,7 @@ import struct
 import sys
 
 from utility import load_mnist_images, load_mnist_labels, sigmoid, \
-init_parameters, create_batch, extract_target_data 
+init_parameters, create_batch, extract_target_data
 
 
 def compute_cost(X, Y, w, b, lambd, regularized):
@@ -56,7 +56,8 @@ def optimize(X, Y, w, b, learning_rate, lambd, regularized):
 
 class LogisticRegression(object):
 
-    def __init__(self, n_feature, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01, regularized=2):
+    def __init__(self, n_feature, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01, regularized=2,\
+     print_cost=False, print_period=20, record=False, record_period=20):
         self.n_epoch = n_epoch
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -65,37 +66,44 @@ class LogisticRegression(object):
         self.cost = -1.
         self.regularized = regularized
 
+        self.print_cost = print_cost
+        self.print_period = print_period
+        self.record = record
+        self.record_period = record_period
 
-    def fit(self, X, Y, holdout=0.1, test_X=None, test_Y=None):
+
+    def fit(self, X, Y, holdout_X=None, holdout_Y=None, test_X=None, test_Y=None):
         train = {'cost': [], 'accuracy': []}
         val = {'cost': [], 'accuracy':[]}
         test = {'cost':[], 'accuracy':[]}
 
-        m = X.shape[-1]
-        permutation = np.random.permutation(m)
-        X_shuffle = X[:, permutation]
-        Y_shuffle = Y[:, permutation]
-        m_holdout = int(m*holdout)
-
         for i in range(self.n_epoch):
-            X_batches, Y_batches, n_batch = create_batch(X[:, m_holdout:], Y[:, m_holdout:], self.batch_size)
+            X_batches, Y_batches, n_batch = create_batch(X, Y, self.batch_size)
 
             for j in range(n_batch):
                 self.w, self.b, self.cost = optimize(X_batches[j], Y_batches[j], self.w, self.b, self.learning_rate, self.lambd, self.regularized)
-            valCost = compute_cost(X[:, :m_holdout], Y[:, :m_holdout], self.w, self.b, self.lambd, self.regularized)
-            valAcc = self.predict(X[:, :m_holdout], Y[:, :m_holdout])
 
-            if (i+1) % 20 == 0:
-                print('%d epoches cost: %f' % (i+1, self.cost))
-
-                # Recording data for plotting
+            # record plot data, toggle by set record to True and set record period
+            if self.record and (i+1) % self.record_period == 0:
+                trainAcc = self.predict(X, Y)
                 train['cost'].append(self.cost)
-                val['cost'].append(valCost)
-                train['accuracy'].append(self.predict(X[:, m_holdout:], Y[:, m_holdout:]))
-                val['accuracy'].append(valAcc)
-                if test_X is not None and test_Y is not None:
-                    test['cost'].append(compute_cost(test_X, test_Y, self.w, self.b, self.lambd, self.regularized))
-                    test['accuracy'].append(self.predict(test_X, test_Y))
+                train['accuracy'].append(trainAcc)
+
+                if holdout_X is not None:
+                    valCost = compute_cost(holdout_X, holdout_Y, self.w, self.b, self.lambd, self.regularized)
+                    valAcc = self.predict(holdout_X, holdout_Y)
+                    val['cost'].append(valCost)
+                    val['accuracy'].append(valAcc)
+
+                if test_X is not None:
+                    testCost = compute_cost(test_X, test_Y, self.w, self.b, self.lambd, self.regularized)
+                    testAcc = self.predict(test_X, test_Y)
+                    test['cost'].append(testCost)
+                    test['accuracy'].append(testAcc)
+
+            # print cost, toggle by set print_cost to True and set print period
+            if self.print_cost and (i+1) % self.print_period == 0:
+                print('%d epoches cost: %f' % (i+1, self.cost))
 
         return train, val, test
 
@@ -110,7 +118,7 @@ class LogisticRegression(object):
         self.accuracy = np.sum(correct) / m
         return self.accuracy
 
-
+'''
 def __main__():
     train_images = load_mnist_images('train-images.idx3-ubyte', 20000)
     train_labels = load_mnist_labels('train-labels.idx1-ubyte', 20000)
@@ -120,12 +128,10 @@ def __main__():
     test_images = test_images[-2000:]
     test_labels = test_labels[-2000:]
 
-    '''
     # Show A Image
-    plt.gray()
-    plt.imshow(train_images[50])
-    plt.show()
-    '''
+    #plt.gray()
+    #plt.imshow(train_images[50])
+    #plt.show()
 
     m_train = train_images.shape[0]
     m_test = test_images.shape[0]
@@ -161,4 +167,5 @@ def __main__():
     ax3.imshow(sigmoid_2_model.w.reshape(28,28))
     plt.show()
 
-#__main__()
+__main__()
+'''
