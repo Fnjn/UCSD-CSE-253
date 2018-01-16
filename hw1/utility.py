@@ -32,6 +32,16 @@ def load_mnist_labels(path, max_labels=sys.maxsize):
             labels.append(label)
     return np.array(labels)
 
+def extract_target_data(X, Y, target1, target2):
+    p1 = (Y == target1)
+    p2 = (Y == target2)
+    p = p1 | p2
+    x_target = X[:,p]
+    y_target = Y[p]
+    y_target = (y_target == target1)
+    y_target = np.expand_dims(y_target, axis=0)
+    return x_target, y_target
+
 def sigmoid(x):
     return 1. / (1 + np.exp(-x))
 

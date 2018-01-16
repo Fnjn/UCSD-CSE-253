@@ -6,20 +6,10 @@ import struct
 import sys
 
 from utility import load_mnist_images, load_mnist_labels, sigmoid, \
-init_parameters, create_batch
+init_parameters, create_batch, extract_target_data 
 
 
-def extract_target_data(X, Y, target1, target2):
-    p1 = (Y == target1)
-    p2 = (Y == target2)
-    p = p1 | p2
-    x_target = X[:,p]
-    y_target = Y[p]
-    y_target = (y_target == target1)
-    y_target = np.expand_dims(y_target, axis=0)
-    return x_target, y_target
-
-def compute_cost(X, Y, w, b, lambd, regularized=0):
+def compute_cost(X, Y, w, b, lambd, regularized):
     m = Y.shape[-1]
     Z = np.dot(w, X) + b
     A = sigmoid(Z)
@@ -28,28 +18,32 @@ def compute_cost(X, Y, w, b, lambd, regularized=0):
     if regularized == 1:
             cost += lambd * np.linalg.norm(w, 1) / m
     elif regularized == 2:
-            cost += lambd * np.linalg.norm(w, 2)
+            cost += lambd * np.linalg.norm(w, 2) / m
 
     return cost
 
-
-def logistic_propagate(X, Y, w, b, lambd):
+def logistic_propagate(X, Y, w, b, lambd, regularized):
     m = Y.shape[-1]
     Z = np.dot(w, X) + b
     A = sigmoid(Z)
 
-    cost = compute_cost(X, Y, w, b, lambd, 2)
+    cost = compute_cost(X, Y, w, b, lambd, regularized)
 
-    dw = np.dot((A - Y), X.T) / m + 2 * lambd * w / m
+    dw = np.dot((A - Y), X.T) / m
     db = np.sum((A - Y), axis=1, keepdims=True) / m
+
+    if regularized == 2:
+        dw += 2 * lambd * w / m
+    elif regularized == 1:
+        dw += lambd * np.sign(w) / m
 
     grad = {'dw':dw, 'db':db}
 
     return grad, cost
 
 
-def optimize(X, Y, w, b, learning_rate, lambd):
-    grad, cost = logistic_propagate(X, Y, w, b, lambd)
+def optimize(X, Y, w, b, learning_rate, lambd, regularized):
+    grad, cost = logistic_propagate(X, Y, w, b, lambd, regularized)
 
     dw = grad['dw']
     db = grad['db']
@@ -62,14 +56,14 @@ def optimize(X, Y, w, b, learning_rate, lambd):
 
 class LogisticRegression(object):
 
-
-    def __init__(self, n_feature, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01):
+    def __init__(self, n_feature, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01, regularized=2):
         self.n_epoch = n_epoch
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.lambd = lambd
         self.w, self.b = init_parameters(n_feature, 1)
         self.cost = -1.
+        self.regularized = regularized
 
 
     def fit(self, X, Y, holdout=0.1, test_X=None, test_Y=None):
@@ -83,26 +77,25 @@ class LogisticRegression(object):
         Y_shuffle = Y[:, permutation]
         m_holdout = int(m*holdout)
 
-
         for i in range(self.n_epoch):
             X_batches, Y_batches, n_batch = create_batch(X[:, m_holdout:], Y[:, m_holdout:], self.batch_size)
 
             for j in range(n_batch):
-                self.w, self.b, self.cost = optimize(X_batches[j], Y_batches[j], self.w, self.b, self.learning_rate, self.lambd)
+                self.w, self.b, self.cost = optimize(X_batches[j], Y_batches[j], self.w, self.b, self.learning_rate, self.lambd, self.regularized)
+            valCost = compute_cost(X[:, :m_holdout], Y[:, :m_holdout], self.w, self.b, self.lambd, self.regularized)
+            valAcc = self.predict(X[:, :m_holdout], Y[:, :m_holdout])
 
-            if i % 20 == 0:
-                print('%d epoches cost: %f' % (i, self.cost))
+            if (i+1) % 20 == 0:
+                print('%d epoches cost: %f' % (i+1, self.cost))
 
                 # Recording data for plotting
                 train['cost'].append(self.cost)
-                val['cost'].append(compute_cost(X[:, :m_holdout], Y[:, :m_holdout], self.w, self.b, self.lambd, 2))
+                val['cost'].append(valCost)
                 train['accuracy'].append(self.predict(X[:, m_holdout:], Y[:, m_holdout:]))
-                val['accuracy'].append(self.predict(X[:, :m_holdout], Y[:, :m_holdout]))
+                val['accuracy'].append(valAcc)
                 if test_X is not None and test_Y is not None:
-                    test['cost'].append(compute_cost(test_X, test_Y, self.w, self.b, self.lambd, 2))
+                    test['cost'].append(compute_cost(test_X, test_Y, self.w, self.b, self.lambd, self.regularized))
                     test['accuracy'].append(self.predict(test_X, test_Y))
-
-
 
         return train, val, test
 
@@ -168,4 +161,4 @@ def __main__():
     ax3.imshow(sigmoid_2_model.w.reshape(28,28))
     plt.show()
 
-__main__()
+#__main__()

@@ -210,4 +210,4 @@ def __main__():
         ax3.imshow(softmax_model.parameters['w'][i].reshape(28,28))
     plt.show()
 
-__main__()
+#__main__()
