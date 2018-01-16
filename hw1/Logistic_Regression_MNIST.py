@@ -6,7 +6,7 @@ import struct
 import sys
 
 from utility import load_mnist_images, load_mnist_labels, sigmoid, \
-init_parameters, create_batch, extract_target_data
+init_parameters, create_batch, extract_target_data, strictly_increasing
 
 
 def compute_cost(X, Y, w, b, lambd, regularized):
@@ -56,8 +56,8 @@ def optimize(X, Y, w, b, learning_rate, lambd, regularized):
 
 class LogisticRegression(object):
 
-    def __init__(self, n_feature, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01, regularized=2,\
-     print_cost=False, print_period=20, record=False, record_period=20):
+    def __init__(self, n_feature, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01,\
+     regularized=2,  T=0., print_cost=False, print_period=20, record=False, record_period=20, early_stop=False, stop_step=3):
         self.n_epoch = n_epoch
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -65,11 +65,14 @@ class LogisticRegression(object):
         self.w, self.b = init_parameters(n_feature, 1)
         self.cost = -1.
         self.regularized = regularized
+        self.T = T
 
         self.print_cost = print_cost
         self.print_period = print_period
         self.record = record
         self.record_period = record_period
+        self.early_stop = early_stop
+        self.stop_step = stop_step
 
 
     def fit(self, X, Y, holdout_X=None, holdout_Y=None, test_X=None, test_Y=None):
@@ -83,6 +86,8 @@ class LogisticRegression(object):
             for j in range(n_batch):
                 self.w, self.b, self.cost = optimize(X_batches[j], Y_batches[j], self.w, self.b, self.learning_rate, self.lambd, self.regularized)
 
+            self.learning_rate /= 1. + self.T
+
             # record plot data, toggle by set record to True and set record period
             if self.record and (i+1) % self.record_period == 0:
                 trainAcc = self.predict(X, Y)
@@ -94,6 +99,10 @@ class LogisticRegression(object):
                     valAcc = self.predict(holdout_X, holdout_Y)
                     val['cost'].append(valCost)
                     val['accuracy'].append(valAcc)
+
+                    if self.early_stop and (i+1) / self.record_period > self.stop_step and strictly_increasing(val['cost'][-self.stop_step:]):
+                        print('Early stop at %d epoch' % (i+1))
+                        break
 
                 if test_X is not None:
                     testCost = compute_cost(test_X, test_Y, self.w, self.b, self.lambd, self.regularized)
@@ -107,6 +116,7 @@ class LogisticRegression(object):
 
         return train, val, test
 
+
     def predict(self, X, Y):
         m = X.shape[-1]
 
@@ -117,55 +127,3 @@ class LogisticRegression(object):
         correct = (self.Y_p == Y)
         self.accuracy = np.sum(correct) / m
         return self.accuracy
-
-'''
-def __main__():
-    train_images = load_mnist_images('train-images.idx3-ubyte', 20000)
-    train_labels = load_mnist_labels('train-labels.idx1-ubyte', 20000)
-    test_images = load_mnist_images('t10k-images.idx3-ubyte')
-    test_labels = load_mnist_labels('t10k-labels.idx1-ubyte')
-
-    test_images = test_images[-2000:]
-    test_labels = test_labels[-2000:]
-
-    # Show A Image
-    #plt.gray()
-    #plt.imshow(train_images[50])
-    #plt.show()
-
-    m_train = train_images.shape[0]
-    m_test = test_images.shape[0]
-    train_X = train_images.reshape(m_train, -1).T / 255.
-    test_X = test_images.reshape(m_test, -1).T / 255.
-
-    train_X, train_Y = extract_target_data(train_X, train_labels, 2, 3)
-    test_X, test_Y = extract_target_data(test_X, test_labels, 2, 3)
-
-    n_feature = train_X.shape[0]
-
-    sigmoid_2_model = LogisticRegression(n_feature, n_epoch=400)
-    train, val, test = sigmoid_2_model.fit(train_X, train_Y, test_X=test_X, test_Y=test_Y)
-    sigmoid_2_model.predict(test_X, test_Y)
-    print('Softmax Regression on Category 2 and 3 Accuracy: %f %%' % (sigmoid_2_model.accuracy * 100))
-
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(211)
-    tc_plt, = ax1.plot(train['cost'], label='Training Cost')
-    vc_plt, = ax1.plot(val['cost'], label='Validation Cost')
-    tec_plt, =  ax1.plot(test['cost'], label='Test Cost')
-    ax1.legend(handles=[tc_plt, vc_plt, tec_plt])
-    ax2 = fig1.add_subplot(212)
-    ta_plt, = ax2.plot(train['accuracy'], label='Training Accuracy')
-    va_plt, = ax2.plot(val['accuracy'], label='Validating Accuracy')
-    tea_plt, =  ax2.plot(test['accuracy'], label='Test Accuracy')
-    ax2.legend(handles=[ta_plt, va_plt, tea_plt], loc=4)
-    plt.show()
-
-
-    fig2 = plt.figure()
-    ax3 = fig2.add_subplot(111)
-    ax3.imshow(sigmoid_2_model.w.reshape(28,28))
-    plt.show()
-
-__main__()
-'''

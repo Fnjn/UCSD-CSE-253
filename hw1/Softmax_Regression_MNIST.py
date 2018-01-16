@@ -6,7 +6,7 @@ import struct
 import sys
 
 from utility import load_mnist_images, load_mnist_labels, softmax, \
-one_hot_encoding, init_parameters, create_batch
+one_hot_encoding, init_parameters, create_batch, strictly_increasing
 
 '''
 print(train_X.shape)    # n_feature * m_train
@@ -85,7 +85,9 @@ def adam_optimize(X, Y, parameters, learning_rate=0.001, lambd=0.01, beta1=0.9, 
 
 class SoftmaxRegression(object):
 
-    def __init__(self, n_feature, n_classes, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+    def __init__(self, n_feature, n_classes, n_epoch, batch_size=32, learning_rate=0.001,\
+     lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8), regularized=2, T=0.,\
+     print_cost=False, print_period=20, record=False, record_period=20, early_stop=False, stop_step=3):
         self.n_epoch = n_epoch
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -93,42 +95,60 @@ class SoftmaxRegression(object):
         self.beta1 = beta1
         self.beta2 = beta2
         self.epsilon = epsilon
+        self.cost = -1.
+        self.regularized = regularized
+        self.T = T
+
         w, b = init_parameters(n_feature, n_classes)
         v, s = init_adam(w, b)
         self.parameters = {'w':w, 'b':b, 'v':v, 's':s}
-        self.cost = -1.
 
-    def fit(self, X, Y, test_X=None, test_Y=None, holdout=0.1):
+        self.print_cost = print_cost
+        self.print_period = print_period
+        self.record = record
+        self.record_period = record_period
+        self.early_stop = early_stop
+        self.stop_step = stop_step
+
+    def fit(self, X, Y, holdout_X=None, holdout_Y=None, test_X=None, test_Y=None):
         train = {'cost': [], 'accuracy': []}
         val = {'cost': [], 'accuracy':[]}
         test = {'cost':[], 'accuracy':[]}
 
-        m = X.shape[-1]
-        permutation = np.random.permutation(m)
-        X_shuffle = X[:, permutation]
-        Y_shuffle = Y[:, permutation]
-        m_holdout = int(m*holdout)
-
-
         for i in range(self.n_epoch):
-            X_batches, Y_batches, n_batch = create_batch(X[:, m_holdout:], Y[:, m_holdout:], self.batch_size)
+            X_batches, Y_batches, n_batch = create_batch(X, Y, self.batch_size)
 
             for j in range(n_batch):
                 self.parameters, self.cost = adam_optimize(X_batches[j], Y_batches[j], self.parameters, \
                 self.learning_rate, self.lambd, self.beta1, self.beta2, self.epsilon)
 
+            self.learning_rate /= 1. + self.T
 
-            if i % 20 == 0:
-                print('%d epoches cost: %f' % (i, self.cost))
-
-                # Recording data for plotting
+            # record plot data, toggle by set record to True and set record period
+            if self.record and (i+1) % self.record_period == 0:
+                trainAcc = self.predict(X, Y)
                 train['cost'].append(self.cost)
-                val['cost'].append(compute_cost(X[:, :m_holdout], Y[:, :m_holdout], self.parameters['w'], self.parameters['b'], self.lambd))
-                train['accuracy'].append(self.predict(X[:, m_holdout:], Y[:, m_holdout:]))
-                val['accuracy'].append(self.predict(X[:, :m_holdout], Y[:, :m_holdout]))
-                if test_X is not None and test_Y is not None:
-                    test['cost'].append(compute_cost(test_X, test_Y, self.parameters['w'], self.parameters['b'], self.lambd))
-                    test['accuracy'].append(self.predict(test_X, test_Y))
+                train['accuracy'].append(trainAcc)
+
+                if holdout_X is not None:
+                    valCost = compute_cost(holdout_X, holdout_Y, self.w, self.b, self.lambd, self.regularized)
+                    valAcc = self.predict(holdout_X, holdout_Y)
+                    val['cost'].append(valCost)
+                    val['accuracy'].append(valAcc)
+
+                    if self.early_stop and (i+1) / self.record_period > self.stop_step and strictly_increasing(val['cost'][-self.stop_step:]):
+                        print('Early stop at %d epoch' % (i+1))
+                        break
+
+                if test_X is not None:
+                    testCost = compute_cost(test_X, test_Y, self.w, self.b, self.lambd, self.regularized)
+                    testAcc = self.predict(test_X, test_Y)
+                    test['cost'].append(testCost)
+                    test['accuracy'].append(testAcc)
+
+            # print cost, toggle by set print_cost to True and set print period
+            if self.print_cost and (i+1) % self.print_period == 0:
+                print('%d epoches cost: %f' % (i+1, self.cost))
 
         return train, val, test
 

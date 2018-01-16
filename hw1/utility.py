@@ -50,6 +50,8 @@ def split_holdout(X, Y, holdout_ratio):
     m_holdout = int(m * holdout_ratio)
     return X[:,:-m_holdout], Y[:,:-m_holdout], X[:,-m_holdout:], Y[:,-m_holdout:]
 
+def strictly_increasing(L):
+    return all(x<y for x, y in zip(L, L[1:]))
 
 def sigmoid(x):
     return 1. / (1 + np.exp(-x))
