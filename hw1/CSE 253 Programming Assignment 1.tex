@@ -116,7 +116,7 @@ J(w) = E(w) + \lambda C(w)
  $L_2:$\begin{align*}
  C(w) = ||w||^2
  \end{align*}
-
+\subsection{Discussion}
 \subsubsection*{(a)} 
 To derive the gradient descent of the two types of regularizations, we have 
 
@@ -130,12 +130,12 @@ $L_2$: \begin{align*}
 To figure out the best $\lambda$ to regularize the weight, we train our model against the lambda value of 0.0001, 0.001, 0.01, 0.1 and 1, and two types of regularization respectively.
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale = 0.7]{lambda_train_1.png}
+	\includegraphics[scale = 0.7]{pics/lambda_train_1.png}
 	\caption{L1 regularization. Model accuracy vs training epochs, with different values of lambda}
 \end{figure}
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale = 0.7]{lambda_train_2.png}
+	\includegraphics[scale = 0.7]{pics/lambda_train_2.png}
 	\caption{L2 regularization. Model accuracy vs training epochs, with different values of lambda}
 \end{figure}
 
@@ -148,12 +148,12 @@ To see the actual effect that regularization poses on weight, we plot the 2-norm
 \begin{figure}[h]
 	\begin{minipage}{0.48\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{weight_1.png}
+		\includegraphics[width=\textwidth]{pics/weight_1.png}
 		\caption{L1 regularization. Weight vector vs lambda}
 	\end{minipage}\hfill
 	\begin {minipage}{0.48\textwidth}
 	\centering
-		\includegraphics[width=\textwidth]{weight_2.png}
+		\includegraphics[width=\textwidth]{pics/weight_2.png}
 		\caption{L2 regularization.  Weight vector vs lambda}
 \end{minipage}
 \end{figure}
@@ -162,12 +162,12 @@ We then want to check the practical values of using regularization. By testing t
 \begin{figure}[h]
 	\begin{minipage}{0.48\textwidth}
 		\centering
-	\includegraphics[width=\textwidth]{lambda_test_1.png}
+	\includegraphics[width=\textwidth]{pics/lambda_test_1.png}
 	\caption{L1 regularization. Test error versus lambda}
 	\end{minipage}\hfill
 	\begin {minipage}{0.48\textwidth}
 	\centering
-	\includegraphics[width=\textwidth]{lambda_test_2.png}
+	\includegraphics[width=\textwidth]{pics/lambda_test_2.png}
 	\caption{L2 regularization. Test error versus lambda}
 \end{minipage}
 \end{figure}
@@ -179,23 +179,148 @@ The best lambda for our model is $\lambda=10^{-2}$
 \subsubsection*{(e)}
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=\textwidth]{weight_img.png}
+	\includegraphics[width=\textwidth]{pics/weight_img.png}
 	\caption{Weight images with different lambda. Lambda increases from left to right}
 \end{figure}
 Through the weight images, we can observe that with higher lambda, the weight image is actually more blurred than the one with lower lambda. There are mode granule details in images with lower lambda. This is may because the weights in lower lambda image can grow more freely than the one with higher lambda.
 \section{Softmax regression via gradient descent}
 \subsection{Problem abstract}
-\subsection{Further discussion}
-\subsubsection{Implementation}
-\subsubsection{Discussion}
-\subsubsection{Result}
-\subsection{Epilogue}
+The following section will focus on using the technique we have mention above to apply to all categories of hand-written digits. Softmax is the activation function we use in this application. It is an extension of the sigmoid function we used in Logistic Regression. Note that the softmax function is \begin{align*}
+y_k^n =\frac{exp(a_k^n)}{\sum_{k'} exp(a_k'^n )}
+\end{align*}
+
+\subsection{Discussion}
+\subsubsection*{(a)}
+We first find the best lambda and regularization for the softmax model. 
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/softmax_reg_1.png}
+		\caption{L1 regularization. Holdout  accuracy over training. Early stop enabled.}
+	\end{minipage}\hfill
+	\begin {minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/softmax_reg_2.png}
+	\caption{L1 regularization. Holdout accuracy vs lambda. Early stop enabled.}
+\end{minipage}
+\end{figure}
+For L1 regularization, the holdout set has a highest accuracy when $\lambda=0.001$.
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/softmax_reg_3.png}
+		\caption{L2 regularization. Holdout  accuracy over training. Early stop enabled.}
+	\end{minipage}\hfill
+	\begin {minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/softmax_reg_4.png}
+	\caption{L2 regularization. Holdout accuracy vs lambda. Early stop enabled.}
+\end{minipage}
+\end{figure}
+For L2 regularization, the holdout set has a highest accuracy when $\lambda=0.001$.
+
+Note that the two kinds of regularization does not has a significant difference when $\lambda$ is low. However, as $\lambda$ increases in magnitude, the L1 regularization significantly impedes the accuracy, given its larger value compared to L2. We choose L2 for stabler result in general cases.
+For the best case
+
+\subsubsection{(b)}
+Training accuracy 92.688889 %, Val accuracy 92.650000 %, Test accuracy: 93.600000 %
+With L2 regularization and $\lambda=0.001$, we train the model to classify 10 hand written digits. The training loss is 0.4191, the holdout loss is 0.2726and the test loss is 0.2078.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{pics/softmax_best_loss.png}
+	\caption{The loss function plot versus every 20 training epochs for the trained softmax model. $\lambda =0.001$, L2 regularization, learning rate = 0.001. }
+\end{figure}
+
+\subsubsection{(c)}
+With L2 regularization and $\lambda=0.001$, we train the model to classify 10 hand written digits. Training accuracy 92.688889 \%, val accuracy 92.650000 \%, and test accuracy: 93.600000 \%
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{pics/softmax_best_accuracy.png}
+	\caption{The accuracy plot versus every 20 training epochs for the trained softmax model. $\lambda =0.001$, L2 regularization, learning rate = 0.001. }
+\end{figure}
+
+\subsubsection{(d)}
+
+We plot the weight for each category and its corresponding average image in the training set.
+
+\begin{figure}[thbp]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/0.png}
+		\caption{Weight for category 0 and the average weight of 0 in training set}
+	\end{minipage}\hfill
+	\begin {minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/1.png}
+	\caption{Weight for category 1 and the average weight of 1 in training set}
+\end{minipage}
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/2.png}
+		\caption{Weight for category 2 and the average weight of 2 in training set}
+	\end{minipage}\hfill
+	\begin {minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/3.png}
+	\caption{Weight for category 3 and the average weight of 3 in training set}
+\end{minipage}
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/4.png}
+		\caption{Weight for category 4 and the average weight of 4 in training set}
+	\end{minipage}\hfill
+	\begin {minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/5.png}
+	\caption{Weight for category 5 and the average weight of 5 in training set}
+\end{minipage}
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/6.png}
+		\caption{Weight for category 6 and the average weight of 6 in training set}
+	\end{minipage}\hfill
+	\begin {minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/7.png}
+	\caption{Weight for category 7 and the average weight of 7 in training set}
+\end{minipage}
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/8.png}
+		\caption{Weight for category 8 and the average weight of 8 in training set}
+	\end{minipage}\hfill
+	\begin {minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/9.png}
+	\caption{Weight for category 9 and the average weight of 9 in training set}
+\end{minipage}
+\end{figure}
+
 
 \section{Summary}
+To conclude, in this assignment, we first use logistic regression to discriminate digits of two categories. After experiment, we settle on the learning rate of 0.001 and the L2 regularization with parameter $\lambda = 0.001$ for our training task. We achieve a best result of 98.02\% accuracy on digits 2 and 3 and 96.10\% on 2 and 8. For the softmax task, we use a learning rate of 0.00001 and L2 regularization with  $\lambda = 0.001$, and achieve a accuracy of 93.60 \% on all ten categories.
 
+From this assignment, we learn how to implement logistic and softmax regression. Through comparison and experimenting, we discover the effects of different parameters and the rationale behind each effect. 
 \section{Contributions}
 
+
+Xinyue Ou is in charged of the regularization experimenting and softmax regression. He wrote part of the codes to help better illustrate the results we obtain in the model.
 \section{References}
+[1] Bishop, C. M., {\it Neural networks for pattern recognition}, Oxford: Oxford University Press, 2013.
+\end{document}
+
+
+
+
+
+
+
+
+
+
+% The following part is displayed
+
+
 
 \section{Submission of papers to NIPS 2017}
 
@@ -516,4 +641,3 @@ learning and recall at excitatory recurrent synapses and cholinergic
 modulation in rat hippocampal region CA3. {\it Journal of
   Neuroscience} {\bf 15}(7):5249-5262.
 
-\end{document}
