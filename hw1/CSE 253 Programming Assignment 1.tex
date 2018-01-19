@@ -31,7 +31,9 @@
 \begin{document}
 
 \maketitle
-
+\begin{abstract}
+	In this assignment, we design a logistic classifier and a softmax classifier to classify digits from the mnist dataset. Holdout validation, early stop, learning rate annealing and regularization are implemented and relative parameters are tuned to achieve the best results. The logistic model we trained on the '2' and '3' digits discriminate the classes with a 98.02\% and  96.10\% for digits '2' and '8'. The softmax model we train for all the 10 digits achieve an accuracy of 93.60\%.
+\end{abstract}
 \section{Derive the gradient for logistic regression}
 \begin{equation*}
 \begin{gathered}
@@ -92,17 +94,76 @@ We use the first 20,000 training images and the first 2,000 testing images.
 \section{Logistic regression via gradient descent}
 \subsection{Problem abstract}
 In this section, our object is to use logistic regression to classify 2 categories of handwritten digits. We use gradient descent technique to train the weight, and mini-batch to get faster convergence. We also experiment annealing, early stop, and regularization to achieve better generalization.
+\subsection{Find best learning rates}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{pics/learning_rate.png}
+	\caption{2-3 classifier accuracy versus learning rate}
+\end{figure}
 
-\subsection{Further discussion}
-\subsubsection{}
-\subsubsection{}
-\subsubsection{Repeat exercise for 2 vs. 8}
-\subsubsection{Display weights images}
+From the picture we can note that the learning rate of $10^{-2}$ actually achieve the best results.  For the following discussion, it is assumed that learning rate of $10^{-2}$ is used.
 
-\subsubsection{Implementation}
-\subsubsection{Result}
-\subsection{Epilogue}
+\subsection{Discussion}
+\subsubsection*{(a)}
+We learn our model by using 10\% holdout from the training set. During the training, the training data are divided into batch size of 32 minibatch before feed into the optimizer. 
 
+With 400 epochs of training, we obtain the following result:
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/2_3_loss.png}
+	\caption{2-3 classifier loss function versus training epochs}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/2_3_accuracy.png}
+	\caption{2-3 classifier accuracy function versus training epochs}
+\end{minipage}
+	
+\end{figure}
+
+Early stop is also implemented in our model, but since the holdout loss keeps decreasing, the training does not have an early stop this time. 
+
+The holdout set does have a similar behavior as the test set. They exhibit highly similar values in terms of loss. It means that the holdout set is a good stand in for the testing set, which justifies the early stop method that prevents the model from overfitting. The reason why the results are so similar is quite obvious, the separation of the holdout set and the training set is random and the hold out set does not participate in the training procedure, which makes them as alien to the model as the testing set. 
+
+\subsubsection*{(b)}
+The results of the accuracy of the 2-3 classifier is shown in the figure. As observed, the hold out set has the highest accuracy, followed by the testing set and the training set. This may due to some special cases in the data.
+The test accuracy for this model is 98.02\%.
+\subsubsection*{(c)}
+The same procedures are applied to 2-8 classifier. The test accuracy for this model is 96.10\%.
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/2_8_loss.png}
+		\caption{2-8 classifier loss function versus training epochs}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/2_8_accuracy.png}
+		\caption{2-8 classifier accuracy function versus training epochs}
+	\end{minipage}
+\end{figure}
+
+\subsubsection*{(d)}
+We then display the weights from the two classifiers as well as their difference. 
+\begin{figure}[h]
+	\begin{minipage}{0.3\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/2_3.png}
+		\caption{Weights of 2-3 classifier}
+	\end{minipage}\hfill
+	\begin{minipage}{0.3\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/2_8.png}
+		\caption{Weights of 2-8 classifier}
+	\end{minipage}\hfill
+	\begin{minipage}{0.3\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/3_8.png}
+		\caption{difference between the two classifier}
+	\end{minipage}
+\end{figure}
+We can actually interpret the classifier from the figures. For 2-3 classifier, the part that makes '2' a 2 is the right white part in the left bottom corner, basically the horizontal stoke of 2. And '3' is a 3 for the middle black part, and the bottom black part. Similar analysis can be made on the 2-8 classifier. The '8' is classifid to 8 when it has the black part in the top left corner, which 2 does not have. The difference of the weight is obtained by subtracting the weight of 2-8 from the weight of 2-3. We counter the weights of '2' in the difference. It can be use as a weight of 8-3 classifier, which outputs 1 when it is '8' and 0 when it is '3'. 
 \section{Regulation}
 \subsection{Problem abstract}
 Sometimes the regression model suffers from over fit, which reduces the generalization of the model. This can be improved by introducing regularization part to the loss function. With the cost function becoming \begin{align*}
@@ -240,10 +301,8 @@ With L2 regularization and $\lambda=0.001$, we train the model to classify 10 ha
 \end{figure}
 
 \subsubsection{(d)}
-
-We plot the weight for each category and its corresponding average image in the training set.
-
-\begin{figure}[thbp]
+We plot the weight for each category and its corresponding average image in the training set in \ref{pic1}. 
+\begin{figure}[thbp]\label{pic1}
 	\begin{minipage}{0.48\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{pics/0.png}
@@ -302,7 +361,7 @@ To conclude, in this assignment, we first use logistic regression to discriminat
 
 From this assignment, we learn how to implement logistic and softmax regression. Through comparison and experimenting, we discover the effects of different parameters and the rationale behind each effect. 
 \section{Contributions}
-
+Fanjin Zeng is in charge of the derivation and logistic regression. He wrote the main frame of the codes for both logistic and softmax regression. 
 
 Xinyue Ou is in charged of the regularization experimenting and softmax regression. He wrote part of the codes to help better illustrate the results we obtain in the model.
 \section{References}
