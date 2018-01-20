@@ -58,12 +58,8 @@ def one_hot_encoding(labels, n_feature):
         encode[labels[i], i] = 1
     return encode
 
-def init_parameters(dim1, dim2, setZero=False):
-    if setZero:
-        w = np.zeros((dim2, dim1))
-    else:
-        w = np.random.randn(dim2, dim1) * 0.01
-
+def init_parameters(dim1, dim2, factor=0.01):
+    w = np.random.randn(dim2, dim1) * factor
     b = np.zeros((dim2, 1))
     return w, b
 

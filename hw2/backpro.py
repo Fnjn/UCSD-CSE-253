@@ -6,8 +6,10 @@ from utility import init_parameters, init_adam, sigmoid, softmax, tanh, create_b
 
 def init_parameters_layers(layers):
     parameters = {}
+    n_input = layers[0]
     for i in range(1, len(layers)):
-        w, b = init_parameters(layers[i-1], layers[i])
+        #w, b = init_parameters(layers[i-1], layers[i])
+        w, b = init_parameters(layers[i-1], layers[i], factor=1./np.sqrt(n_input))
         v, s = init_adam(w, b)
         parameters['w'+str(i)] = w
         parameters['b'+str(i)] = b
@@ -138,7 +140,7 @@ def adam_optimize(X, Y, parameters, layers, learning_rate, lambd, beta1, beta2, 
 
 class NN_model(object):
 
-    def __init__(self, layers, n_epoch, batch_size=32, learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+    def __init__(self, layers, n_epoch, batch_size=128, learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
         self.layers = layers
         self.n_epoch = n_epoch
         self.batch_size = batch_size
