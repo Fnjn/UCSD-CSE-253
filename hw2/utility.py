@@ -100,3 +100,40 @@ def create_batch(X, Y, batch_size):
         n_batch += 1
 
     return X_batches, Y_batches, n_batch
+
+def grad_to_vec(grad, layers):
+    vec = []
+    for i in range(1, len(layers)):
+        dw = grad[i-1]['dw']
+        db = grad[i-1]['db']
+        for j in range(dw.shape[0]):
+            for k in range(dw.shape[1]):
+                vec.append(dw[j,k])
+        for j in range(db.shape[0]):
+            vec.append(db[j,0])
+    return np.array(vec)
+
+def dict_to_vec(parameters, layers):
+    vec = []
+    for i in range(1, len(layers)):
+        w = parameters['w'+str(i)]
+        b = parameters['b'+str(i)]
+        for j in range(w.shape[0]):
+            for k in range(w.shape[1]):
+                vec.append(w[j,k])
+        for j in range(b.shape[0]):
+            vec.append(b[j,0])
+    return np.array(vec)
+
+def vec_to_dict(para_vec, layers):
+    para_dict =  {}
+    cnt = 0
+    for i in range(1, len(layers)):
+        w = para_vec[cnt:cnt+layers[i]*layers[i-1]].reshape((layers[i], layers[i-1]))
+        cnt += layers[i]*layers[i-1]
+        b = para_vec[cnt:cnt+layers[i]].reshape(layers[i], 1)
+        cnt += layers[i]
+
+        para_dict['w'+str(i)] = w
+        para_dict['b'+str(i)] = b
+    return para_dict

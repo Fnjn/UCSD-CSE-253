@@ -2,7 +2,8 @@
 
 import numpy as np
 
-from utility import init_parameters, init_adam, sigmoid, softmax, tanh, create_batch
+from utility import init_parameters, init_adam, sigmoid, softmax, tanh,\
+ create_batch, grad_to_vec, dict_to_vec, vec_to_dict
 
 def init_parameters_layers(layers):
     parameters = {}
@@ -140,7 +141,8 @@ def adam_optimize(X, Y, parameters, layers, learning_rate, lambd, beta1, beta2, 
 
 class NN_model(object):
 
-    def __init__(self, layers, n_epoch, batch_size=128, learning_rate=0.001, lambd=0.01, beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+    def __init__(self, layers, n_epoch, batch_size=128, learning_rate=0.001, lambd=0.01, \
+    beta1=0.9, beta2=0.999, epsilon=10**(-8)):
         self.layers = layers
         self.n_epoch = n_epoch
         self.batch_size = batch_size
@@ -160,7 +162,8 @@ class NN_model(object):
                 self.parameters, self.cost = adam_optimize(X_batches[j], Y_batches[j], self.parameters, \
                 self.layers, self.learning_rate, self.lambd, self.beta1, self.beta2, self.epsilon)
 
-            if i % 20 == 0: print('%d epoches cost: %f' % (i, self.cost))
+            if (i+1) % 20 == 0:
+                print('%d epoches cost: %f' % (i, self.cost))
 
     def predict(self, X, Y):
         m = X.shape[-1]
@@ -172,3 +175,35 @@ class NN_model(object):
         self.accuracy = np.sum(correct) / m
 
         return self.accuracy
+
+    def gradient_check(self, X, Y):
+        n_layers = len(self.layers)
+        epsilon= 10e-2
+
+        activation_caches, caches, cost = forward(X, Y, self.parameters, self.layers, self.lambd)
+        gradient = backward(activation_caches, caches, Y, self.lambd)
+
+        parameters_vec = dict_to_vec(self.parameters, self.layers)
+        grad = grad_to_vec(gradient, self.layers)
+        grad_approx = np.zeros((parameters_vec.shape))
+
+        for i in range(len(parameters_vec)):
+            p_plus = np.copy(parameters_vec)
+            p_minus = np.copy(parameters_vec)
+
+            p_plus[i] += epsilon
+            p_minus[i] -= epsilon
+
+            _, _, cost_plus = forward(X, Y, vec_to_dict(p_plus, self.layers), self.layers, self.lambd)
+            _, _, cost_minus = forward(X, Y, vec_to_dict(p_minus, self.layers), self.layers, self.lambd)
+
+            grad_approx[i] = cost_plus - cost_minus
+            print(grad_approx[i]/(2 * epsilon) -  grad[i])
+
+        grad_approx /= 2 * epsilon
+        diff = grad - grad_approx
+        self.diff = diff
+        if any(diff > 10e-4):
+            print('Gradient check found %d possible problems.' % (np.sum(diff > 10e-4, dtype=int)))
+        else:
+            print('No problem found in gradient check.')
