@@ -3,7 +3,7 @@
 import numpy as np
 
 from utility import init_parameters, init_adam, sigmoid, softmax, tanh,\
- create_batch, grad_to_vec, dict_to_vec, vec_to_dict
+ create_batch, grad_to_vec, dict_to_vec, vec_to_dict, strictly_increasing
 
 def init_parameters_layers(layers):
     parameters = {}
@@ -142,7 +142,8 @@ def adam_optimize(X, Y, parameters, layers, learning_rate, lambd, beta1, beta2, 
 class NN_model(object):
 
     def __init__(self, layers, n_epoch, batch_size=128, learning_rate=0.001, lambd=0.01, \
-    beta1=0.9, beta2=0.999, epsilon=10**(-8)):
+    beta1=0.9, beta2=0.999, epsilon=10**(-8), print_cost=True, record=False, record_period=20,
+    print_period=20, early_stop=False, stop_step=3):
         self.layers = layers
         self.n_epoch = n_epoch
         self.batch_size = batch_size
@@ -154,16 +155,53 @@ class NN_model(object):
         self.parameters = init_parameters_layers(layers)
         self.cost = -1.
 
-    def fit(self, X, Y):
+        self.print_cost = print_cost
+        self.print_period = print_period
+        self.record = record
+        self.record_period = record_period
+        self.early_stop = early_stop
+        self.stop_step = stop_step
+
+
+    def fit(self, X, Y, holdout_X=None, holdout_Y=None, test_X=None, test_Y=None):
+        train = {'cost': [], 'accuracy': []}
+        val = {'cost': [], 'accuracy':[]}
+        test = {'cost':[], 'accuracy':[]}
+
         for i in range(self.n_epoch):
             X_batches, Y_batches, n_batch = create_batch(X, Y, self.batch_size)
 
             for j in range(n_batch):
                 self.parameters, self.cost = adam_optimize(X_batches[j], Y_batches[j], self.parameters, \
                 self.layers, self.learning_rate, self.lambd, self.beta1, self.beta2, self.epsilon)
+        
+            # record plot data, toggle by set record to True and set record period
+            if self.record and (i+1) % self.record_period == 0:
+                trainAcc = self.predict(X, Y)
+                train['cost'].append(self.cost)
+                train['accuracy'].append(trainAcc)
 
-            if (i+1) % 20 == 0:
-                print('%d epoches cost: %f' % (i, self.cost))
+                if holdout_X is not None:
+                    _, _, valCost = forward(holdout_X, holdout_Y, self.parameters, self.layers, self.lambd)
+                    valAcc = self.predict(holdout_X, holdout_Y)
+                    val['cost'].append(valCost)
+                    val['accuracy'].append(valAcc)
+
+                    if self.early_stop and (i+1) / self.record_period > self.stop_step and strictly_increasing(val['cost'][-self.stop_step:]):
+                        print('Early stop at %d epoch' % (i+1))
+                        break
+
+                if test_X is not None:
+                    _, _, testCost = forward(test_X, test_Y, self.parameters, self.layers, self.lambd)
+                    testAcc = self.predict(test_X, test_Y)
+                    test['cost'].append(testCost)
+                    test['accuracy'].append(testAcc)
+
+            # print cost, toggle by set print_cost to True and set print period
+            if self.print_cost and (i+1) % self.print_period == 0:
+                print('%d epoches cost: %f' % (i+1, self.cost))
+
+        return train, val, test
 
     def predict(self, X, Y):
         m = X.shape[-1]

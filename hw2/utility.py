@@ -3,7 +3,7 @@
 import numpy as np
 import struct
 import sys
-
+import matplotlib.pyplot as plt
 
 def load_mnist_images(path, max_images=sys.maxsize):
     with open(path, 'rb') as f:
@@ -137,3 +137,23 @@ def vec_to_dict(para_vec, layers):
         para_dict['w'+str(i)] = w
         para_dict['b'+str(i)] = b
     return para_dict
+
+def plot_cost_acc(train, val, test):
+    fig1 = plt.figure()
+    tc_plt, = plt.plot(train['cost'], label='Training Cost')
+    if(val['cost'] and test['cost']):
+        vc_plt, = plt.plot(val['cost'], label='Validation Cost')
+        tec_plt, =  plt.plot(test['cost'], label='Test Cost')
+        plt.legend(handles=[tc_plt, vc_plt, tec_plt])
+    plt.show()
+
+    fig2 = plt.figure()
+    ta_plt, = plt.plot(train['accuracy'], label='Training Accuracy')
+    if(val['accuracy'] and test['accuracy']):
+        va_plt, = plt.plot(val['accuracy'], label='Validating Accuracy')
+        tea_plt, =  plt.plot(test['accuracy'], label='Test Accuracy')
+        plt.legend(handles=[ta_plt, va_plt, tea_plt])
+    plt.show()
+
+def strictly_increasing(L):
+    return all(x<y for x, y in zip(L, L[1:]))
