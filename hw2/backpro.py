@@ -99,20 +99,20 @@ def forward(x, y, parameters, layers, lambd, predict=False):
 
     return activation_caches, caches, cost
 
-def backward(a_caches, caches, y, lambd):
+def backward(a_caches, caches, y, lambd, activation):
     grads = []
 
     grad = softmax_backward_block(a_caches[-1], y, caches[-1], lambd)
     grads.append(grad)
     for i in reversed(range(len(a_caches)-1)):
-        grad = linear_backward_block(a_caches[i], grads[-1]['da_prev'], caches[i], activation='sigmoid')
+        grad = linear_backward_block(a_caches[i], grads[-1]['da_prev'], caches[i], activation=activation)
         grads.append(grad)
 
     return list(reversed(grads))
 
-def adam_optimize(X, Y, parameters, layers, learning_rate, lambd, beta1, beta2, epsilon):
+def adam_optimize(X, Y, parameters, layers, learning_rate, lambd, beta1, beta2, epsilon, activation='sigmoid'):
     activation_caches, caches, cost = forward(X, Y, parameters, layers, lambd)
-    grad = backward(activation_caches, caches, Y, lambd)
+    grad = backward(activation_caches, caches, Y, lambd, activation)
 
     for i in range(1, len(layers)):
         dw = grad[i-1]['dw']
@@ -142,7 +142,7 @@ def adam_optimize(X, Y, parameters, layers, learning_rate, lambd, beta1, beta2, 
 class NN_model(object):
 
     def __init__(self, layers, n_epoch, batch_size=128, learning_rate=0.001, lambd=0.01, \
-    beta1=0.9, beta2=0.999, epsilon=10**(-8), print_cost=True, record=False, record_period=20,
+    beta1=0.9, beta2=0.999, epsilon=10**(-8), activation='sigmoid', print_cost=True, record=False, record_period=20, \
     print_period=20, early_stop=False, stop_step=3):
         self.layers = layers
         self.n_epoch = n_epoch
@@ -154,6 +154,7 @@ class NN_model(object):
         self.epsilon = epsilon
         self.parameters = init_parameters_layers(layers)
         self.cost = -1.
+        self.activation = activation
 
         self.print_cost = print_cost
         self.print_period = print_period
@@ -174,7 +175,7 @@ class NN_model(object):
             for j in range(n_batch):
                 self.parameters, self.cost = adam_optimize(X_batches[j], Y_batches[j], self.parameters, \
                 self.layers, self.learning_rate, self.lambd, self.beta1, self.beta2, self.epsilon)
-        
+
             # record plot data, toggle by set record to True and set record period
             if self.record and (i+1) % self.record_period == 0:
                 trainAcc = self.predict(X, Y)
@@ -219,7 +220,7 @@ class NN_model(object):
         epsilon= 10e-2
 
         activation_caches, caches, cost = forward(X, Y, self.parameters, self.layers, self.lambd)
-        gradient = backward(activation_caches, caches, Y, self.lambd)
+        gradient = backward(activation_caches, caches, Y, self.lambd, self.activation)
 
         parameters_vec = dict_to_vec(self.parameters, self.layers)
         grad = grad_to_vec(gradient, self.layers)
