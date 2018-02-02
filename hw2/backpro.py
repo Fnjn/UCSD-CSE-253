@@ -9,7 +9,7 @@ def init_parameters_layers(layers):
     parameters = {}
     n_input = layers[0]
     for i in range(1, len(layers)):
-        #w, b = init_parameters(layers[i-1], layers[i])
+        # w, b = init_parameters(layers[i-1], layers[i])
         w, b = init_parameters(layers[i-1], layers[i], factor=1./np.sqrt(n_input))
         v, s = init_adam(w, b)
         parameters['w'+str(i)] = w
@@ -131,6 +131,7 @@ def adam_optimize(X, Y, parameters, layers, learning_rate, lambd, beta1, beta2, 
 
         w -= learning_rate * (v['w'] / (np.sqrt(s['w']) + epsilon))
         b -= learning_rate * (v['b'] / (np.sqrt(s['b']) + epsilon))
+
 
         parameters['w'+str(i)] = w
         parameters['b'+str(i)] = b

@@ -34,7 +34,7 @@
 
 \maketitle
 \begin{abstract}
-	
+	In this assignment, we design a neural network to classify digits from the mnist dataset. The neural net with one hidden layer of 64 units attain a testing accuracy of 96.96\% after applying "the tricks of the trade." A double layer network with 300 hidden for the first and 100 hidden for the second rewrites the accuracy to be 97.79\%. A network with one layer of 1024 units attains an accuracy of 98.28\%.
 \end{abstract}
 \section{Classification}
 \subsection{}
@@ -84,7 +84,7 @@ When doubling the number of hidden units, i.e., training with 128 neural in the 
 If the number of the hidden units is too small, the accuracy goes down, but higher number of hidden units significantly increases the training period.
 
 \subsection{Double Hidden Layers}
-We use a network with first layer having 48 units and the second one having 16. The testing accuracy of it is 96.21\%.
+We use a network with first layer having 48 units and the second one having 16. The testing accuracy of it is 96.21\%. It does not have significant improvement on the accuracy.
 \begin{figure}[h]
 	\begin{minipage}{0.48\textwidth}
 	\centering
@@ -98,6 +98,39 @@ We use a network with first layer having 48 units and the second one having 16. 
 	\end{minipage}
 \end{figure}
 
+Another network we use is a network with 300 hidden units for the first hidden layer and 100 hidden units for the second hidden layer. It gets an accuracy of 97.79\%
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/loss_300_100.png}
+	\caption{Loss function over training epoch, with first hidden layer having 300 units and the second having 100}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{pics/acc_300_100.png}
+	\caption{Loss function over training epoch, with first hidden layer having 300 units and the second having 100}
+	\end{minipage}
+\end{figure}
+
 \subsection{Extra: Adam Optimizer}
 We use adam optimizer for updating parameters, which usually helps to get faster convergence. The result has been mentioned above.  
+
+
+\newpage
+\section{Summary}
+To conclude, in this assignment, we build a neural networks to to discriminate digits of ten categories. Starting with a accuracy of 95\%, we improve the accuracy by using proper weight initialization, activation function, and momentum method to accelerate the training. We also explore different network structure to find the best result. 
+
+The best result we achieve is 98.28\% with 1024 hidden units during the experiment playing with the number of hidden units.  With Adam optimizer it learns quickly for about 60 epochs.
+Except for this exceptionally large network, we have a two-hidden-layer network with 300 hidden units and 100 units respectively which achieve a result of 97.79\% of testing accuracy.
+
+From this assignment, we learn neural network implementation and apply some tricks of trade to it. While proper preprocessing and weight initialization can improve the accuracy a little bit, momentum can increase the learning speed. Also increasing the number of hidden units can increase the accuracy rate quite a lot while deepening the network with the same number of weight parameter does not pose a significant improvement.
+\section{Contributions}
+Fanjin Zeng is in charge of the derivation and the implementation of back propagation. He introduces adam optimizer to the model that significantly improves the performance. 
+
+Xinyue Ou is in charged of training the model using different network structures and improving the performance.
+
+
+\section{References}
+[1] Bishop, C. M., {\it Neural networks for pattern recognition}, Oxford: Oxford University Press, 2013.
+
 \end{document}
