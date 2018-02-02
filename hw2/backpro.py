@@ -143,8 +143,7 @@ def adam_optimize(X, Y, parameters, layers, learning_rate, lambd, beta1, beta2, 
 class NN_model(object):
 
     def __init__(self, layers, n_epoch, batch_size=128, learning_rate=0.001, lambd=0.01, \
-    beta1=0.9, beta2=0.999, epsilon=10**(-8), activation='sigmoid', print_cost=True, record=False, record_period=20, \
-    print_period=20, early_stop=False, stop_step=3):
+    beta1=0.9, beta2=0.999, epsilon=10**(-8), activation='sigmoid', print_cost=True, print_period=20):
         self.layers = layers
         self.n_epoch = n_epoch
         self.batch_size = batch_size
@@ -159,16 +158,15 @@ class NN_model(object):
 
         self.print_cost = print_cost
         self.print_period = print_period
-        self.record = record
-        self.record_period = record_period
-        self.early_stop = early_stop
-        self.stop_step = stop_step
 
 
-    def fit(self, X, Y, holdout_X=None, holdout_Y=None, test_X=None, test_Y=None):
+    def fit(self, X, Y, holdout_X, holdout_Y, test_X=None, test_Y=None):
         train = {'cost': [], 'accuracy': []}
         val = {'cost': [], 'accuracy':[]}
         test = {'cost':[], 'accuracy':[]}
+
+        self.min_val_acc = 0.
+        self.min_param = None
 
         for i in range(self.n_epoch):
             X_batches, Y_batches, n_batch = create_batch(X, Y, self.batch_size)
@@ -177,31 +175,30 @@ class NN_model(object):
                 self.parameters, self.cost = adam_optimize(X_batches[j], Y_batches[j], self.parameters, \
                 self.layers, self.learning_rate, self.lambd, self.beta1, self.beta2, self.epsilon)
 
-            # record plot data, toggle by set record to True and set record period
-            if self.record and (i+1) % self.record_period == 0:
-                trainAcc = self.predict(X, Y)
-                train['cost'].append(self.cost)
-                train['accuracy'].append(trainAcc)
+            trainAcc = self.predict(X, Y)
+            train['cost'].append(self.cost)
+            train['accuracy'].append(trainAcc)
 
-                if holdout_X is not None:
-                    _, _, valCost = forward(holdout_X, holdout_Y, self.parameters, self.layers, self.lambd)
-                    valAcc = self.predict(holdout_X, holdout_Y)
-                    val['cost'].append(valCost)
-                    val['accuracy'].append(valAcc)
+            _, _, valCost = forward(holdout_X, holdout_Y, self.parameters, self.layers, self.lambd)
+            valAcc = self.predict(holdout_X, holdout_Y)
+            val['cost'].append(valCost)
+            val['accuracy'].append(valAcc)
 
-                    if self.early_stop and (i+1) / self.record_period > self.stop_step and strictly_increasing(val['cost'][-self.stop_step:]):
-                        print('Early stop at %d epoch' % (i+1))
-                        break
+            if valAcc > self.min_val_acc:
+                self.min_param = self.parameters
+                self.min_val_acc = valAcc
 
-                if test_X is not None:
-                    _, _, testCost = forward(test_X, test_Y, self.parameters, self.layers, self.lambd)
-                    testAcc = self.predict(test_X, test_Y)
-                    test['cost'].append(testCost)
-                    test['accuracy'].append(testAcc)
+            if test_X is not None:
+                _, _, testCost = forward(test_X, test_Y, self.parameters, self.layers, self.lambd)
+                testAcc = self.predict(test_X, test_Y)
+                test['cost'].append(testCost)
+                test['accuracy'].append(testAcc)
 
             # print cost, toggle by set print_cost to True and set print period
             if self.print_cost and (i+1) % self.print_period == 0:
                 print('%d epoches cost: %f' % (i+1, self.cost))
+
+        self.parameters = self.min_param
 
         return train, val, test
 
@@ -218,6 +215,7 @@ class NN_model(object):
 
     def gradient_check(self, X, Y):
         n_layers = len(self.layers)
+        m = X.shape[-1]
         epsilon= 10e-2
 
         activation_caches, caches, cost = forward(X, Y, self.parameters, self.layers, self.lambd)
@@ -225,24 +223,27 @@ class NN_model(object):
 
         parameters_vec = dict_to_vec(self.parameters, self.layers)
         grad = grad_to_vec(gradient, self.layers)
-        grad_approx = np.zeros((parameters_vec.shape))
 
-        for i in range(len(parameters_vec)):
+        perm = np.random.permutation(grad.shape[0])
+        grad = grad[perm[:3000]]
+        grad_approx = np.zeros((grad.shape))
+
+        for i in range(grad.shape[0]):
             p_plus = np.copy(parameters_vec)
             p_minus = np.copy(parameters_vec)
 
-            p_plus[i] += epsilon
-            p_minus[i] -= epsilon
+            p_plus[perm[i]] += epsilon
+            p_minus[perm[i]] -= epsilon
 
             _, _, cost_plus = forward(X, Y, vec_to_dict(p_plus, self.layers), self.layers, self.lambd)
             _, _, cost_minus = forward(X, Y, vec_to_dict(p_minus, self.layers), self.layers, self.lambd)
 
-            grad_approx[i] = cost_plus - cost_minus
-            print(grad_approx[i]/(2 * epsilon) -  grad[i])
+            grad_approx[i] = (cost_plus - cost_minus) * m
 
         grad_approx /= 2 * epsilon
-        diff = grad - grad_approx
+        diff = np.abs(grad - grad_approx)
         self.diff = diff
+
         if any(diff > 10e-4):
             print('Gradient check found %d possible problems.' % (np.sum(diff > 10e-4, dtype=int)))
         else:

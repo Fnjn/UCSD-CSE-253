@@ -155,5 +155,13 @@ def plot_cost_acc(train, val, test):
         plt.legend(handles=[ta_plt, va_plt, tea_plt])
     plt.show()
 
+def plot_diff(diff):
+    fig = plt.figure()
+    plt.plot(diff, label='Gradient Check Differences')
+    fig.suptitle('Gradient Check Differences')
+    plt.xlabel('Weights')
+    plt.ylabel('Difference')
+    plt.show()
+
 def strictly_increasing(L):
     return all(x<y for x, y in zip(L, L[1:]))

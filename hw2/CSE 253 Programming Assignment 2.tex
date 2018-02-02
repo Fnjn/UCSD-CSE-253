@@ -34,18 +34,124 @@
 
 \maketitle
 \begin{abstract}
-	In this assignment, we design a neural network to classify digits from the mnist dataset. The neural net with one hidden layer of 64 units attain a testing accuracy of 96.96\% after applying "the tricks of the trade." A double layer network with 300 hidden for the first and 100 hidden for the second rewrites the accuracy to be 97.79\%. A network with one layer of 1024 units attains an accuracy of 98.28\%.
+	In this assignment, we design a neural network to classify digits from the mnist dataset. The neural net with one hidden layer of 64 units attain a testing accuracy of 96.96\% after applying "the tricks of the trade." We tried vary neural network structures. A double layer network with 300 hidden for the first and 100 hidden for the second rewrites the accuracy to be 97.79\%. A network with one layer of 1024 units attains an accuracy of 98.28\%.
 \end{abstract}
+
 \section{Classification}
-\subsection{}
-\subsection{}
-\subsection{}
-\subsection{}
+\subsection{Read data from MNIST databast}
+In this part, we reuse our code from Programming assignment 1.
+
+After getting the dataset from \href{http://yann.lecun.com/exdb/mnist/}{this page}, we read it into our program by unpacking it to desired structure. According to the file format description, for image data, the first 16 bytes are the magic number, the size, the row and the column, followed by the actual data. For the label data, the first 8 bytes are the magic number and the size.
+
+For convenience, we reshape the train and test image data into 784 * (Number of images). Then, we encode train and test labels using one-hot scheme.
+
+We randomly shuffle all train dataset, and partition 50,000 of them as training data and the rest 10,000 as validation data.
+
+\subsection{Centering data}
+We use the described scheme to center the data, so that they're in range [-1, 1]. Here is how we implement it:
+\begin{lstlisting}
+train_images = train_images.reshape(m_train, -1).T / 127.5 - 1
+test_images = test_images.reshape(m_test, -1).T / 127.5 - 1
+\end{lstlisting}
+
+\subsection{Gradient Check}
+We implement gradient check to check the correctness of our back propagation. However, gradient check is very computational expensive, we only run it for 3000 randomly selected weight parameters over 10,000 training data. The result shows that all except 23 weight parameters agree with in $10^{-4}$.
+\begin{figure}[h]
+	\begin{minipage}{0.6\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/gradient_check.png}
+		\caption{Gradient check. Differences over weight parameters}
+	\end{minipage}\hfill
+\end{figure}
+
+\subsection{Results}
+Here, we implement the default layout: 784 inputs, 1 hidden layer with 64 neurons and 10 outputs. We split the training dataset into 2 parts: 50,000 of them as training data and the rest 10,000 as validation data. We implement mini-batch and use adams optimizer. During training, we save the weight parameters that result in the highest validation set accuracy to prevent over-fitting. After training, we use the saved weight parameters with highest validation set accuracy. We train over 200 epoches, and get 96.65\% accuracy on whole test set.
+
+\begin{figure}[h]
+	\begin{minipage}{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/cost_default.png}
+		\caption{Cost over epoches}
+	\end{minipage}\hfill
+	\begin{minipage}{0.4\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/acc_default.png}
+		\caption{Accuracy epoches}
+	\end{minipage}\hfill
+\end{figure}
 
 \newpage
 \section{Adding the "Tricks of the Trade"}
-\subsection{}
-\subsection{}
+\subsection{Shuffle and minibatch}
+We implement minibatch with batch size of 128. On every epoch, we first reshuffle all train data, and partition them into many parts, and each part(except the last part) contains 128 train images and labels. By using mini-batch technique, the weight parameters get more frequently update, and thus, faster convergence speed.
+Here is our implementation:
+\begin{lstlisting}
+def create_batch(X, Y, batch_size):
+	m = X.shape[-1]
+	n_batch = int(m / batch_size)
+	
+	X_batches = []
+	Y_batches = []
+	
+	permutation = np.random.permutation(m)
+	X_shuffle = X[:, permutation]
+	Y_shuffle = Y[:, permutation]
+	
+	for i in range(n_batch):
+		X_batch = X_shuffle[:, i * batch_size: (i+1) * batch_size]
+		Y_batch = Y_shuffle[:, i * batch_size: (i+1) * batch_size]
+		X_batches.append(X_batch)
+		Y_batches.append(Y_batch)
+	
+	if m % n_batch != 0:
+		X_batch = X_shuffle[:, n_batch * batch_size:]
+		Y_batch = Y_shuffle[:, n_batch * batch_size:]
+		X_batches.append(X_batch)
+		Y_batches.append(Y_batch)
+		n_batch += 1
+
+return X_batches, Y_batches, n_batch
+\end{lstlisting}
+
+\subsection{Sigmoid activation function}
+We implement both sigmoid and tanh activation functions. For this section, we use sigmoid as the activation function. In our code, linear\_forward\_block function handles forward operation on each non-output layers, and linear\_backward\_block function handles the corresponding layer back propagation operation.\\
+\\
+Here is our forward block:
+\begin{lstlisting}
+def linear_forward_block(a_prev, w, b, activation):
+	h = np.dot(w, a_prev) + b
+	if activation == 'sigmoid':
+		a = sigmoid(h)
+	else:
+		a = tanh(h)
+		
+	cache = {'a_prev':a_prev, 'w':w, 'b':b}
+	
+	return a, cache
+\end{lstlisting}
+Here is our backward block:
+\begin{lstlisting}
+def linear_backward_block(a, da, cache, activation):
+	a_prev = cache['a_prev']
+	w = cache['w']
+	b = cache['b']	
+	m = a_prev.shape[1]
+	
+	if activation == 'sigmoid':
+		dh = a * (1 - a)
+	else:
+		dh = 1 - (a ** 2)
+	
+	dh *= da
+	dw = np.dot(dh, a_prev.T)
+	db = np.sum(dh, axis=1, keepdims=True)
+	da_prev = np.dot(w.T, dh)
+	
+	grad = {'dw':dw, 'db':db, 'da_prev':da_prev}
+	
+	return grad
+\end{lstlisting}
+
 \subsection{Weight Initialization}
 Our code actually starts with this trick. It initializes the weights to be a normal distribution with 0 mean and unit deviation. What's different is that we employ fan-in factor this time. Before the test accuracy is 0.9656 and after that it is 0.9679. It improves a little bit, but not help that much.
 \subsection{Momentum}
@@ -83,37 +189,85 @@ When doubling the number of hidden units, i.e., training with 128 neural in the 
 \end{figure}
 If the number of the hidden units is too small, the accuracy goes down, but higher number of hidden units significantly increases the training period.
 
-\subsection{Double Hidden Layers}
-We use a network with first layer having 48 units and the second one having 16. The testing accuracy of it is 96.21\%. It does not have significant improvement on the accuracy.
+\subsection{Double Hidden Layers 1}
+We use a network with first layer having 48 units and the second one having 16. The testing accuracy of it is 95.99\%. It does not have significant improvement on the accuracy.
 \begin{figure}[h]
 	\begin{minipage}{0.48\textwidth}
 	\centering
 	\includegraphics[width=\textwidth]{pics/loss_double.png}
-	\caption{Loss function over training epoch, with first hidden layer having 48 units and the second having 16}
+	\caption{Loss function over training epoch, with 2 hidden layers (48 and 16 neurons)}
 	\end{minipage}\hfill
 	\begin{minipage}{0.48\textwidth}
 	\centering
 	\includegraphics[width=\textwidth]{pics/acc_double.png}
-	\caption{Loss function over training epoch, with first hidden layer having 48 units and the second having 16}
+	\caption{Accuracy over training epoch, with 2 hidden layers (48 and 16 neurons)}
 	\end{minipage}
 \end{figure}
 
-Another network we use is a network with 300 hidden units for the first hidden layer and 100 hidden units for the second hidden layer. It gets an accuracy of 97.79\%
+\subsection{Double Hidden Layers 2}
+We use a network with first layer having 48 units and the second one having 16. The testing accuracy of it is 95.26\%. It does not have significant improvement on the accuracy.
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/loss_double_32_32.png}
+		\caption{Loss function over training epoch, with 2 hidden layers (32 and 32 neurons)}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/acc_double_32_32.png}
+		\caption{Accuracy over training epoch, with 2 hidden layers (32 and 32 neurons)}
+	\end{minipage}
+\end{figure}
+
+\subsection{Extra: More and more neurons}
+\subsubsection{}
+We try to use more and more neurons!!\\
+Another network we use is a network with 300 hidden units for the first hidden layer and 100 hidden units for the second hidden layer. It gets an accuracy of 97.79\%. We train it for 100 epoch.
 \begin{figure}[h]
 	\begin{minipage}{0.48\textwidth}
 	\centering
 	\includegraphics[width=\textwidth]{pics/loss_300_100.png}
-	\caption{Loss function over training epoch, with first hidden layer having 300 units and the second having 100}
+	\caption{Loss function over training epoch, with 2 hidden layers (300 and 100 neurons)}
 	\end{minipage}\hfill
 	\begin{minipage}{0.48\textwidth}
 	\centering
 	\includegraphics[width=\textwidth]{pics/acc_300_100.png}
-	\caption{Loss function over training epoch, with first hidden layer having 300 units and the second having 100}
+	\caption{Accuracy over training epoch, with 2 hidden layers (300 and 100 neurons)}
+	\end{minipage}
+\end{figure}
+
+\subsubsection{}
+Another network we use is a network with 512 neurons for the hidden layer. It gets an accuracy of 97.94\%.We train it for 100 epoch.
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/loss_512.png}
+		\caption{Loss function over training epoch,  with 1 hidden layer (512 neurons)}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/acc_512.png}
+		\caption{Accuracy function over training epoch, with with 1 hidden layer (512 neurons)}
 	\end{minipage}
 \end{figure}
 
 \subsection{Extra: Adam Optimizer}
-We use adam optimizer for updating parameters, which usually helps to get faster convergence. The result has been mentioned above.  
+We use adam optimizer for updating parameters, which usually helps to get faster convergence. The result has been mentioned above.
+
+\subsection{Extra: Tanh activation function}
+We also implement tanh as activation function. It achieves 95.58\% accuracy on test data after 200 training epoch.
+\begin{figure}[h]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/loss_tanh.png}
+		\caption{Loss over training epoch, by using tanh activation function}
+	\end{minipage}\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/acc_tanh.png}
+		\caption{Accuracy over training epoch, by using tanh activation function}
+	\end{minipage}
+\end{figure}
 
 
 \newpage
