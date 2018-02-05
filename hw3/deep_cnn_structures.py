@@ -12,20 +12,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def same_padding(input_size, kernel_size, stride_size):
-    #assert input_size > 0, assert kernel_size > 0, assert stride_size > 0
-    return input_size - 1 - (input_size - kernel_size // s)
+    return (input_size - 1 - (input_size - kernel_size // stride_size)) // 2
 
 
-class Bottleneck(nn.Module):
+class Bottleneck2(nn.Module):
 
-    def __init__(self, in_channels, channels):
+    def __init__(self, input_size, in_channels, channels):
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels, channels, 1)
-        self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)
-        self.conv3 = nn.Conv2d(channels, in_channels, 1)
-
         self.bn1 = nn.BatchNorm2d(channels)
+
+        self.conv2 = nn.Conv2d(channels, channels, 3, padding=same_padding(input_size, 3, 1))
         self.bn2 = nn.BatchNorm2d(channels)
+
+        self.conv3 = nn.Conv2d(channels, in_channels, 1)
         self.bn3 = nn.BatchNorm2d(in_channels)
 
     def forward(self, x):
@@ -46,36 +46,84 @@ class Bottleneck(nn.Module):
 
         return x
 
+class Bottleneck1(nn.Module):
+
+    def __init__(self, input_size, in_channels, channels, out_channels, stride_size):
+        super().__init__()
+
+        self.conv1 = nn.Conv2d(in_channels, channels, 1, stride=stride_size)
+        self.bn1 = nn.BatchNorm2d(channels)
+
+        self.conv2 = nn.Conv2d(channels, channels, 3, padding=same_padding((input_size-1)//stride_size+1, 3, 1))
+        self.bn2 = nn.BatchNorm2d(channels)
+
+        self.conv3 = nn.Conv2d(channels, out_channels, 1)
+        self.bn3 = nn.BatchNorm2d(out_channels)
+
+        self.conv_sc = nn.Conv2d(in_channels, out_channels, 1, stride=stride_size)
+        self.bn_sc = nn.BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        x_shortcut = x
+
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = F.relu(x)
+
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = F.relu(x)
+
+        x = self.conv3(x)
+        x = self.bn3(x)
+
+        x_shortcut = self.conv_sc(x_shortcut)
+        x_shortcut = self.bn_sc(x_shortcut)
+
+        x.add_(x_shortcut)
+        x = F.relu(x)
+
+        return x
+
+
 class ResNet(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(3, 32, 7, padding=3)
-        self.bn1 = nn.BatchNorm2d(32)
-        self.layer1 = Bottleneck(32, 16)
 
-        self.conv2 = nn.Conv2d(32, 64, 7, padding=3)
-        self.bn2 = nn.BatchNorm2d(64)
-        self.layer2 = Bottleneck(64, 32)
-
-        self.avgpool = nn.AvgPool2d(3, stride=2)
+        self.conv1A = nn.Conv2d(3, 64, 3, stride=1)
+        self.bn1A = nn.BatchNorm2d(64)
         self.maxpool = nn.MaxPool2d(3, stride=2)
 
-        self.fc1 = nn.Linear(15*15*64, 1024)
-        self.fc2 = nn.Linear(1024, 10)
+        self.layer2A = Bottleneck1(14, 64, 64, 256, 1)
+        self.layer2B = Bottleneck2(14, 256, 64)
+        self.layer2C = Bottleneck2(14, 256, 64)
+
+        self.layer3A = Bottleneck1(14, 256, 128, 512, 2)
+        self.layer3B = Bottleneck2(7, 512, 128)
+        self.layer3C = Bottleneck2(7, 512, 128)
+        self.layer3D = Bottleneck2(7, 512, 128)
+
+        self.avgpool = nn.AvgPool2d(2, stride=2)
+
+        self.fc = nn.Linear(3*3*512, 10)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.layer1(x)
+        x = self.conv1A(x)
+        x = self.bn1A(x)
+        x = self.maxpool(x)
 
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.layer2(x)
+        x = self.layer2A(x)
+        x = self.layer2B(x)
+        x = self.layer2C(x)
+
+        x = self.layer3A(x)
+        x = self.layer3B(x)
+        x = self.layer3C(x)
+        x = self.layer3D(x)
 
         x = self.avgpool(x)
-        x = x.view(-1, 15*15*64)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = x.view(-1, 3*3*512)
+        x = self.fc(x)
 
         return x
