@@ -21,6 +21,9 @@ __pycache__/
 *.xz
 *.7z
 
+# Data Folders
+*/data/
+
 # Distribution / packaging
 .Python
 env/
