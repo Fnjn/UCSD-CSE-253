@@ -5,15 +5,15 @@ from torch.utils.data import Dataset, DataLoader
 import PIL
 class Caltech256(Dataset):
     '''
-    
+
     Args:
-    
+
         root_dir (string): Location of Caltech256 Dataset,
         images_per_class (int): Number of images to load per class. Class clutter is ignored
         transform (torch.transform): transformation to perform on input image
-    
+
     Example Usage:
-    
+
         example_transform = transforms.Compose(
             [
                 transforms.Scale((224,224)),
@@ -22,15 +22,15 @@ class Caltech256(Dataset):
         )
 
         caltech256_train = Caltech256("/datasets/Caltech256/256_ObjectCategories/", example_transform, train=True)
-        
+
         train_data = DataLoader(
             dataset = caltech256_train,
             batch_size = 32,
             shuffle = True,
             num_workers = 4
         )
-        
-        
+
+
     '''
     def __init__(self, root_dir, transform=None, train = True):
         self.images_per_class = 32 if train else 8
@@ -47,20 +47,19 @@ class Caltech256(Dataset):
 
             currdir = os.path.join(root_dir, cat)
             images = os.listdir(currdir)
-            images = filter(lambda s: s.endswith("jpg"), images)
+            images = list(filter(lambda s: s.endswith("jpg"), images))
             assert self.images_per_class <= len(images), "Not enough images in class {c}".format(c = currdir)
-                
+
             for i in range(self.start_image, self.end_image):
                 self.files[os.path.join(currdir, images[i])] = int("".join(images[i][0:3]))
-                 
+
     def __len__(self):
         return len(self.files)
-    
+
     def __getitem__(self, idx):
         img_name, label = list(self.files.items())[idx]
         image = PIL.Image.open(img_name).convert("RGB") # A few images are grayscale
-        label = torch.Tensor([label])
-        
+        #label = torch.Tensor([label])
 
         if self.transform:
             image = self.transform(image)
