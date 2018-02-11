@@ -59,6 +59,7 @@ class Caltech256(Dataset):
     def __getitem__(self, idx):
         img_name, label = list(self.files.items())[idx]
         image = PIL.Image.open(img_name).convert("RGB") # A few images are grayscale
+        label -= 1
         #label = torch.Tensor([label])
 
         if self.transform:
