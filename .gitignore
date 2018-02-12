@@ -24,6 +24,12 @@ __pycache__/
 # Data Folders
 */data/
 
+# Models
+*/saved_models/
+*.pt
+*.pickle
+*.pkl
+
 # Distribution / packaging
 .Python
 env/
