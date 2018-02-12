@@ -51,8 +51,8 @@ data_transforms = {
 
 
 # data_dir = 'data/256_ObjectCategories'
-# data_dir = '/datasets/Caltech256/256_ObjectCategories'
-data_dir = '/home/ubuntu/datasets/256_ObjectCategories'
+data_dir = '/datasets/Caltech256/256_ObjectCategories'
+# data_dir = '/home/ubuntu/datasets/256_ObjectCategories'
 
 caltech256_train = Caltech256(data_dir, data_transforms['train'], train=True)
 caltech256_test = Caltech256(data_dir, data_transforms['test'], train=False)
@@ -190,7 +190,7 @@ print(vgg16)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(vgg16.classifier[6].parameters())
 # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30)
-scheduler = lr_scheduler.StepLR(optimizer, step_size=30)
+scheduler = lr_scheduler.StepLR(optimizer, step_size=15)
 
 # vgg16 = nn.DataParallel(vgg16)
 vgg16 = vgg16.cuda()
@@ -204,7 +204,7 @@ data = [caltech256_train, caltech256_test]
 
 print('\n==============================')
 print('Training in progress:')
-md, acc_history, loss_history = train_model(vgg16, data, criterion, optimizer, scheduler, num_epochs=20, batch_size=32)
+md, acc_history, loss_history = train_model(vgg16, data, criterion, optimizer, scheduler, num_epochs=31, batch_size=32)
 np.save('p2_acc_history.npy', acc_history)
 np.save('p2_loss_history.npy', loss_history)
 
