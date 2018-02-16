@@ -156,6 +156,7 @@ def train_model(model, dataset, criterion, optimizer, num_epochs, batch_size, sc
     dataset_size = dataset.__len__()
 
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    record ={'loss':[], 'acc':[]}
 
     for epoch in range(num_epochs):
         if scheduler is not None:
@@ -180,12 +181,14 @@ def train_model(model, dataset, criterion, optimizer, num_epochs, batch_size, sc
 
         epoch_loss = running_loss / dataset_size
         epoch_acc = running_corrects / dataset_size
+        record['loss'].append(epoch_loss)
+        record['acc'].append(epoch_acc)
         print('%d epoch loss: %f    accuracy: %f%%' % (epoch, epoch_loss, epoch_acc*100))
 
     model.train(False)
     time_elapsed = time.time() - start_time
     print('Training comple in %dm, %ds' % (time_elapsed//60, time_elapsed%60))
-    return model
+    return model, record
 
 def test_model(model, dataset):
     testloader = DataLoader(dataset, batch_size=16)
@@ -219,3 +222,25 @@ def each_class_accuracy(model, dataset, num_classes=256):
 
     for i in range(num_classes):
         print('Accuracy of class %d : %2d %%' % (i, 100*class_correct[i]/class_total[i]))
+
+def plot_cost_acc(record):
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111)
+    tc_plt, = ax1.plot(record['acc'], label='Training Accuracy')
+    vc_plt, = ax1.plot(record['loss'], label='Training Loss')
+    ax1.legend(handles=[tc_plt, vc_plt])
+    plt.show()
+
+def plot_acc(acc):
+    acc = np.array(acc) * 100
+    print(acc)
+    plt.plot(acc)
+    plt.ylabel('Accuracy %')
+    plt.xlabel('Epochs')
+    plt.show()
+
+def plot_loss(loss):
+    plt.plot(loss)
+    plt.ylabel('Loss')
+    plt.xlabel('Epochs')
+    plt.show()
