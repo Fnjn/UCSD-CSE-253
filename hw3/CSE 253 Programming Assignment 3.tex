@@ -256,12 +256,91 @@ All the three models go through the 30 epochs without early stop. As the results
 
 \newpage
 \section{Transfer Learning}
+For this part, we used transfer learning with a VGG16 (with batch normalization) network with weights pretrained on ImageNet data (as vgg16\_bn in pytorch). The dataset used was Caltech256, which has 256 classes. We froze the weights of all layers except for the last fully connected layer with softmax. The last layer, originally with 1000 output units, was changed to 256 units and only this layer was trained. We used 32 images per class for training and 8 images per class for testing.\\
+To further explore the features learned by VGG16 network, we used an example image of a dog and passed it through the trained network. The activation maps of the first and last convolutional layers were visualized and analyzed. The filters from the first convolutional layer were also plotted.\\
+
+\subsection{Results}
+The plots of accuracy and loss against number of epochs are shown below. After 2 epochs, the loss of training set continues to decrease while the test set maintains a consistent value with small oscillations. The train and test plots diverge after then, indicating overfitting on the training set. Eventually the final accuracy of train set is 86\% and accuracy of test set is 75\%.\\
+This is a good result considering only 32 training images were used per class. The good performance indicates that the weights trained from ImageNet are helpful in classifying a new dataset that has similar objects as ImageNet.\\
+\begin{figure}[h!]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{part2_pics/loss_epochs.png}
+		\caption{Transfer Learning Model Loss}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{part2_pics/acc_epochs.png}
+		\caption{Transfer Learning Model Accuracy}
+	\end{minipage}
+\end{figure}
+\subsection{Visualization}
+A dog image is passed through the trained network. The selected activation maps of the first and last convolutional layers (10 each) are shown below. The activation maps of the first convolutional layer look very similar to the original image, but with different regions of activations (the bright pixels). This is because each activation map corresponds to a different 2-D filter of basic structures (edges, lines and so on). On the other hand, the activation maps of the last convolutional layer do not look like a dog at all. This result is exactly as expected. The filters of the last layer should contain high level structures of objects (head, body, and so on), and the activation maps simply indicate whether these structures are found in the image.\\
+
+\begin{figure}[h!]
+		\centering
+		\includegraphics[width=0.47\textwidth]{part2_pics/original_img.png}
+		\caption{Original image}
+\end{figure}
+
+\begin{figure}[h!]
+		\centering
+		\includegraphics[width=0.8\textwidth]{part2_pics/conv_activations_0.png}
+		\caption{Activation maps of first conv layer}
+\end{figure}
+\begin{figure}[h!]
+		\centering
+		\includegraphics[width=0.8\textwidth]{part2_pics/conv_activations_1.png}
+		\caption{Activation maps of the last conv layer (up)}
+\end{figure}
+Some filters of the first convolutional layer are shown below. As expected, they represent lines and edges. \\
+\begin{figure}[h!]
+		\centering
+		\includegraphics[width=0.8\textwidth]{part2_pics/conv1_filters.png}
+		\caption{Filters of first conv layer}
+\end{figure}
+
+\subsection{Feature Extraction}
+We use the third and forth intermediate Convolutional blocks as input, and sequentially pass it through a fully connected layer(1024 outputs), a relu layer, a fully connected layer(256 outputs) and a softmax layer. The rest parameters are fixed during the training. \\
+For the third intermediate block input, we use adam optimizer with learning rate 0.00001. After 10 epochs of training, we get 99.41\% accuracy on train set and 27.78\% accuracy on test set.\\
+
+\begin{figure}[h!]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/fe_block3_loss_10epochs.png}
+		\caption{Block 3 Feature Extraction Training Loss}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/fe_block3_acc_10epochs.png}
+		\caption{Block 3 Feature Extraction Training Accuracy}
+	\end{minipage}
+\end{figure}
+
+For the fourth intermediate block input, we use adam optimizer with learning rate 0.0001. After 5 epochs of training, we get 99.66\% accuracy on train set and 44.72\% accuracy on test set.
+
+\begin{figure}[h!]
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/fe_block4_loss.png}
+		\caption{Block 4 Feature Extraction Training Loss}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{pics/fe_block4_acc.png}
+		\caption{Block 4 Feature Extraction Training Accuracy}
+	\end{minipage}
+\end{figure}
+
+The result of our experiment indicates the network have achieved relatively well classification accuracy in fourth convolutional block, and it significantly out performs the third convolutional block. Deeper networks indeed did a much better job than shallow ones.
 
 \newpage
-\section{Summary}
 
 \section{Contributions}
-
+Fanjin Zeng and Yuhan Chen are in charge of implementation of transfer learning. Fanjin implemented parts of the new VGG model and he wrote the code for feature extraction. Yuhan implemented parts of the new VGG model and he wrote the code for filter visualization.
 
 
 \section{References}
@@ -273,6 +352,10 @@ All the three models go through the 30 epochs without early stop. As the results
 
 [4] PyTorch Tutorial, Training a classifier
  
- \url{http://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html}
+ \url{http://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html}\\
+ 
+[5] Transfer Learning tutorial
+
+\url{http://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html}
 
 \end{document}
