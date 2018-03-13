@@ -13,5 +13,3 @@ with tf.device('/device:GPU:0'):
     evaluate = tf.equal(tf.round(encoder), y)
     accuracy = tf.reduce_mean(tf.cast(evaluate, tf.float32))
     metrics_accuracy = tf.metrics.accuracy(labels=y, predictions=encoder)
-
-    
