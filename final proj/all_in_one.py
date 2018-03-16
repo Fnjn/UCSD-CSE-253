@@ -185,7 +185,7 @@ def calculate_bbox_score_and_save_img(index, image_path_name, dataset_image_path
     # Ground Truthc
     image_save_name = image_path_name.split('/')[-2] + '_' + image_path_name.split('/')[-1].split('.')[0]
     image_save_path = dataset_image_path.rsplit('/', 2)[0]
-    image_save_path_name = image_save_path + '/' + index + '.jpg'
+    image_save_path_name = image_save_path + '/' + str(index) + '.jpg'
     logging.debug('image_save_path_name {}'.format(image_save_path_name))
     #img_crop = img_read.crop((gt_y1, gt_x1, gt_y2, gt_x2))
     img_crop = img_read.crop((gt_x1, gt_y1, gt_x2, gt_y2)).resize([64,64])
