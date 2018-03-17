@@ -271,17 +271,18 @@ def generate_labels(attr_idx):
                             image_path_name = line[0]
                             line = np.array(line[1:])
                             line = line[attr_idx]
-                            one_hot = list(map(lambda x: 1 if x == 1 else 0, line))
+                            # print(line)
+                            one_hot = list(map(lambda x: 1 if x == '1' else 0, line))
                      
 
                             dataset_split_name = get_dataset_split_name(image_path_name, file_list_eval_ptr)
                             logging.debug('saving labels of {}'.format(image_path_name))
                             if dataset_split_name == "train":
-                                file_train_label.write(str(count) + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
+                                file_train_label.write(str(count)+ '.jpg' + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
                             elif dataset_split_name == "val":
-                                file_val_label.write(str(count) + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
+                                file_val_label.write(str(count)+ '.jpg' + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
                             elif dataset_split_name == "test":
-                                file_test_label.write(str(count) + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
+                                file_test_label.write(str(count)+ '.jpg' + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
                             else:
                                 logging.error('Unknown dataset_split_name {}'.format(dataset_image_path))
                                 exit(1)
@@ -299,7 +300,7 @@ if __name__ == '__main__':
     logging.debug('category_names {}'.format(category_names))
     attribute_idx, attribute_name = get_attribute_of_interest()
     logging.debug('Selected labels {}'.format(attribute_name))
-    generate_dataset_images(category_names)
+    # generate_dataset_images(category_names)
     generate_labels(attribute_idx)
 
 
