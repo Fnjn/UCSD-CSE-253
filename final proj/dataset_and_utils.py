@@ -11,6 +11,9 @@ import PIL
 from PIL import Image
 import time
 
+import matplotlib
+import matplotlib.pyplot as plt
+
 
 import logging
 # import colored_traceback
@@ -29,9 +32,14 @@ dataset_train_labels_path=os.path.join(dataset_train_path, 'labels.txt')
 dataset_test_labels_path=os.path.join(dataset_test_path, 'labels.txt')
 dataset_val_labels_path=os.path.join(dataset_val_path, 'labels.txt')
 
-# TODO: Add visualization.
-def visualize_img():
-    pass
+def list_devices():
+    from tensorflow.python.client import device_lib
+    return device_lib.list_local_devices()
+
+def show_image(x):
+    plt.figure()
+    plt.imshow(x) 
+    plt.show()
 
 def save_img(I):
     im = Image.fromarray(np.uint8(I))
@@ -48,7 +56,7 @@ def prepare_datasets():
         with open(labels_path) as file_label:
 #             imgs = [np.asarray(Image.open((img_path + '/' +line.split()[0]))) for line in file_label]
 #             labels = [np.array([int(x) for x in line.split()[1:]]) for line in file_label]
-            cnt = 0#dev
+#             cnt = 0#dev
             for line in file_label:
                 line = line.split()
                 image_file_path = img_path + '/' + line[0]
@@ -56,10 +64,10 @@ def prepare_datasets():
                 label = np.array([int(x) for x in line[1:]])
                 imgs.append(img)
                 labels.append(label)
-                cnt += 1 #dev
-                if cnt >100:
-                    break
-            imgs = np.array(imgs)
+#                 cnt += 1 #dev
+#                 if cnt >10000:
+#                     break
+            imgs = np.array(imgs)/255.
             labels = np.array(labels)
             datasets.append(DataSet(imgs, labels))
         print('Duration is {}'.format(time.time()-t))

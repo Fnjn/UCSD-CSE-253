@@ -63,7 +63,7 @@ def generator(z, y, is_training=True):
     deconv4 = tf.contrib.layers.conv2d_transpose(bn3, 64, [4,4], stride=[2,2], padding='VALID')
     bn4 = tf.contrib.layers.batch_norm(deconv4[:,1:-1,1:-1,:], is_training=True)
 
-    deconv5 = tf.contrib.layers.conv2d_transpose(bn4, 3, [4,4], stride=[2,2], padding='VALID', activation_fn=tf.nn.tanh) # dims n * 64 * 64 * 3
+    deconv5 = tf.contrib.layers.conv2d_transpose(bn4, 3, [4,4], stride=[2,2], padding='VALID', activation_fn=tf.nn.sigmoid) # dims n * 64 * 64 * 3
     return deconv5[:,1:-1,1:-1,:]
 
 def discriminator(x, y, ny, is_training=True):
@@ -109,11 +109,11 @@ def gan_loss(x, y, ny):
     loss_pred = loss_fake + loss_real
     loss_gen = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(pred_fake), logits=pred_fake))
 
-    return loss_pred, loss_gen
+    return loss_pred, loss_gen, gen
 
 def classify_loss(x, y, ny):
     with tf.variable_scope('Encoder_Y'):
         Ey = IND_y(x, ny, is_training=True)
 
     loss_cls = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=Ey))
-    return loss_cls
+    return loss_cls, Ey

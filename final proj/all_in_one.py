@@ -161,7 +161,7 @@ def get_attribute_of_interest():
         next(file_list_attr_cloth)
         for line in file_list_attr_cloth:
             line = line.split()
-            if(line[1] in ['3', '4', '5']):
+            if(line[1] in ['3', '5']):
                 attr.append(True)
                 attr_types.append(line[1])
                 attr_names.append(line[0])
@@ -311,12 +311,12 @@ def generate_labels(attr_idx):
 
 if __name__ == '__main__':
 
-    create_dataset_split_structure()
+#     create_dataset_split_structure()
     category_names = get_category_names()
 #     logging.debug('category_names {}'.format(category_names))
     attribute_idx, attribute_name = get_attribute_of_interest()
 #     logging.debug('Selected labels {}'.format(attribute_name))
-    generate_dataset_images(category_names)
+#     generate_dataset_images(category_names)
     generate_labels(attribute_idx)
 
 
