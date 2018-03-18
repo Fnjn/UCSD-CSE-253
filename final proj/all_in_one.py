@@ -155,6 +155,7 @@ def create_category_structure(category_names):
 def get_attribute_of_interest():
     attr = []
     attr_names = []
+    attr_types = []
     with open(fashion_dataset_path + '/Anno/list_attr_cloth.txt') as file_list_attr_cloth:
         next(file_list_attr_cloth)
         next(file_list_attr_cloth)
@@ -162,35 +163,42 @@ def get_attribute_of_interest():
             line = line.split()
             if(line[1] in ['3', '4', '5']):
                 attr.append(True)
+                attr_types.append(line[1])
                 attr_names.append(line[0])
-                logging.debug('select attr {}'.format(line[0]))
+#                 logging.debug('select attr {}'.format(line[0]))
             else:
                 attr.append(False)
-                logging.debug('unselect attr {}'.format(line[0]))
+#                 logging.debug('unselect attr {}'.format(line[0]))
+
+    # Write the attribute summary
+    with open(dataset_path + '/new_list_attr_cloth.txt', 'w') as file_new_list_attr_cloth:
+        for name, t in zip(attr_names, attr_types):
+            file_new_list_attr_cloth.write(name + ' ' + t + '\n')
+            
     return np.array(attr), attr_names
 
 
 
 def calculate_bbox_score_and_save_img(index, image_path_name, dataset_image_path, gt_x1, gt_y1, gt_x2, gt_y2):
 
-    logging.debug('dataset_image_path {}'.format(dataset_image_path))
-    logging.debug('image_path_name {}'.format(image_path_name))
+#     logging.debug('dataset_image_path {}'.format(dataset_image_path))
+#     logging.debug('image_path_name {}'.format(image_path_name))
 
     image_name = image_path_name.split('/')[-1].split('.')[0]
-    logging.debug('image_name {}'.format(image_name))
+#     logging.debug('image_name {}'.format(image_name))
 
     img_read = Image.open(image_path_name)
-    logging.debug('{} {} {}'.format(img_read.format, img_read.size, img_read.mode))
+#     logging.debug('{} {} {}'.format(img_read.format, img_read.size, img_read.mode))
 
     # Ground Truthc
     image_save_name = image_path_name.split('/')[-2] + '_' + image_path_name.split('/')[-1].split('.')[0]
     image_save_path = dataset_image_path.rsplit('/', 2)[0]
     image_save_path_name = image_save_path + '/' + str(index) + '.jpg'
-    logging.debug('image_save_path_name {}'.format(image_save_path_name))
+#     logging.debug('image_save_path_name {}'.format(image_save_path_name))
     #img_crop = img_read.crop((gt_y1, gt_x1, gt_y2, gt_x2))
     img_crop = img_read.crop((gt_x1, gt_y1, gt_x2, gt_y2)).resize([64,64])
     img_crop.save(image_save_path_name)
-    logging.debug('img_crop {} {} {}'.format(img_crop.format, img_crop.size, img_crop.mode))
+#     logging.debug('img_crop {} {} {}'.format(img_crop.format, img_crop.size, img_crop.mode))
 
 
 # Generate images from fashon-data into dataset
@@ -208,13 +216,13 @@ def generate_dataset_images(category_names):
                 for line in file_list_category_img:
                     line = line.split()
                     image_path_name = line[0]
-                    logging.debug('image_path_name {}'.format(image_path_name))                                 # img/Tailored_Woven_Blazer/img_00000051.jpg
+#                     logging.debug('image_path_name {}'.format(image_path_name))                                 # img/Tailored_Woven_Blazer/img_00000051.jpg
                     image_name = line[0].split('/')[-1]
-                    logging.debug('image_name {}'.format(image_name))                                           # image_name img_00000051.jpg
+#                     logging.debug('image_name {}'.format(image_name))                                           # image_name img_00000051.jpg
                     image_full_name = line[0].replace('/', '_')
-                    logging.debug('image_full_name {}'.format(image_full_name))                                 # img_Tailored_Woven_Blazer_img_00000051.jpg
+#                     logging.debug('image_full_name {}'.format(image_full_name))                                 # img_Tailored_Woven_Blazer_img_00000051.jpg
                     image_category_index=int(line[1:][0]) - 1
-                    logging.debug('image_category_index {}'.format(image_category_index))                       # 2
+#                     logging.debug('image_category_index {}'.format(image_category_index))                       # 2
 
                     
 
@@ -262,8 +270,9 @@ def generate_labels(attr_idx):
             with open(dataset_train_path + '/labels.txt', 'w') as file_train_label:
                 with open(dataset_val_path + '/labels.txt', 'w') as file_val_label:
                     with open(dataset_test_path + '/labels.txt', 'w') as file_test_label:
-
-                        count = 0
+                        
+                        count=0
+                        cnts = [0, 0, 0]
                         next(file_list_attr_img)
                         next(file_list_attr_img)
                         for line in file_list_attr_img:
@@ -271,23 +280,30 @@ def generate_labels(attr_idx):
                             image_path_name = line[0]
                             line = np.array(line[1:])
                             line = line[attr_idx]
-                            # print(line)
-                            one_hot = list(map(lambda x: 1 if x == '1' else 0, line))
-                     
-
-                            dataset_split_name = get_dataset_split_name(image_path_name, file_list_eval_ptr)
-                            logging.debug('saving labels of {}'.format(image_path_name))
-                            if dataset_split_name == "train":
-                                file_train_label.write(str(count)+ '.jpg' + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
-                            elif dataset_split_name == "val":
-                                file_val_label.write(str(count)+ '.jpg' + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
-                            elif dataset_split_name == "test":
-                                file_test_label.write(str(count)+ '.jpg' + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
-                            else:
-                                logging.error('Unknown dataset_split_name {}'.format(dataset_image_path))
-                                exit(1)
                             
-                            count += 1
+                            one_hot = list(map(lambda x: 1 if x == '1' else 0, line))
+                            
+                            if (sum(one_hot)!=0):
+                                dataset_split_name = get_dataset_split_name(image_path_name, file_list_eval_ptr)
+#                                 logging.debug('saving labels of {}'.format(image_path_name))
+                                if dataset_split_name == "train":
+                                    file_train_label.write(str(count)+ '.jpg' + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
+                                    cnts[0] += 1
+                                elif dataset_split_name == "val":
+                                    file_val_label.write(str(count)+ '.jpg' + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
+                                    cnts[1] += 1
+                                elif dataset_split_name == "test":
+                                    file_test_label.write(str(count)+ '.jpg' + ' ' + ' '.join(str(x) for x in one_hot) + '\n')
+                                    cnts[2] += 1
+                                else:
+                                    logging.error('Unknown dataset_split_name {}'.format(dataset_image_path))
+                                    exit(1)
+                                    
+                            count+=1
+                            
+                            
+                        for i, name in enumerate(['train', 'val', 'test']):
+                            print(name + 'count: {}\n'.format(cnts[i]))
 
                 
             
@@ -297,10 +313,10 @@ if __name__ == '__main__':
 
     create_dataset_split_structure()
     category_names = get_category_names()
-    logging.debug('category_names {}'.format(category_names))
+#     logging.debug('category_names {}'.format(category_names))
     attribute_idx, attribute_name = get_attribute_of_interest()
-    logging.debug('Selected labels {}'.format(attribute_name))
-    # generate_dataset_images(category_names)
+#     logging.debug('Selected labels {}'.format(attribute_name))
+    generate_dataset_images(category_names)
     generate_labels(attribute_idx)
 
 
