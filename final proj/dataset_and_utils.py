@@ -10,6 +10,7 @@ from random import randint
 import PIL
 from PIL import Image
 import time
+import tensorflow as tf
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -41,9 +42,57 @@ def show_image(x):
     plt.imshow(x) 
     plt.show()
 
+def save_image(x, filename):
+    plt.figure()
+    plt.imshow(x) 
+    plt.savefig(filename)
+    
 def save_img(I):
     im = Image.fromarray(np.uint8(I))
 
+# step 3: parse every image in the dataset using `map`
+def _parse_function(filename, label):
+    image_string = tf.read_file(filename)
+    image_decoded = tf.image.decode_jpeg(image_string, channels=3)
+    image = tf.cast(image_decoded, tf.float32)
+    image = tf.div(image, 256.)
+    return image, label
+    
+def prepare_new_datasets(batch_size):
+    
+    datasets = []
+    for i, labels_path, img_path in zip(range(3), [dataset_train_labels_path, 
+                                                   dataset_val_labels_path, 
+                                                   dataset_test_labels_path],
+                                                  [dataset_train_path, dataset_val_path, dataset_test_path]):
+        raw_filenames = []
+        labels = []
+        t = time.time()
+        with open(labels_path) as file_label:
+#             cnt = 0#dev
+            for line in file_label:
+                line = line.split()
+                raw_filenames.append(img_path + '/' + line[0])
+                labels.append([int(x) for x in line[1:]])
+#                 cnt += 1 #dev
+#                 if cnt >10000:
+#                     break
+            
+            # step 1
+            filenames = tf.constant(raw_filenames)
+            labels = tf.constant(labels)
+
+            # step 2: create a dataset returning slices of `filenames`
+            dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
+            
+            dataset.shuffle(buffer_size=10000)
+            dataset = dataset.map(_parse_function)
+            dataset = dataset.batch(batch_size)
+
+            datasets.append(dataset)
+        print('Duration is {}'.format(time.time()-t))
+    return datasets
+    
 def prepare_datasets():
     datasets = []
     for i, labels_path, img_path in zip(range(3), [dataset_train_labels_path, 
@@ -54,8 +103,6 @@ def prepare_datasets():
         labels = []
         t = time.time()
         with open(labels_path) as file_label:
-#             imgs = [np.asarray(Image.open((img_path + '/' +line.split()[0]))) for line in file_label]
-#             labels = [np.array([int(x) for x in line.split()[1:]]) for line in file_label]
 #             cnt = 0#dev
             for line in file_label:
                 line = line.split()
