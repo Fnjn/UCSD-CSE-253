@@ -63,7 +63,7 @@ def generator(z, y, is_training=True):
     deconv4 = tf.contrib.layers.conv2d_transpose(bn3, 64, [4,4], stride=[2,2], padding='VALID')
     bn4 = tf.contrib.layers.batch_norm(deconv4[:,1:-1,1:-1,:], is_training=True)
 
-    deconv5 = tf.contrib.layers.conv2d_transpose(bn4, 3, [4,4], stride=[2,2], padding='VALID', activation_fn=tf.nn.sigmoid) # dims n * 64 * 64 * 3
+    deconv5 = tf.contrib.layers.conv2d_transpose(bn4, 3, [4,4], stride=[2,2], padding='VALID') # dims n * 64 * 64 * 3
     return deconv5[:,1:-1,1:-1,:]
 
 def discriminator(x, y, ny, is_training=True):
