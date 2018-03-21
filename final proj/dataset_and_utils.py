@@ -49,6 +49,14 @@ def save_image(x, filename):
     
 def save_img(I):
     im = Image.fromarray(np.uint8(I))
+    
+def show_gen(next_batch, gen):
+    imgs, labs = sess.run(next_batch_val)
+    gen_image = sess.run([gen], feed_dict={x:imgs, y:labs})
+
+    show_image(imgs[0])
+    gen_image = np.array(gen_image)
+    show_image(np.squeeze(gen_image)[0])
 
 # step 3: parse every image in the dataset using `map`
 def _parse_function(filename, label):
