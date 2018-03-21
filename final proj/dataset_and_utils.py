@@ -88,7 +88,8 @@ def prepare_new_datasets(batch_size):
             dataset.shuffle(buffer_size=10000)
             dataset = dataset.map(_parse_function)
             dataset = dataset.batch(batch_size)
-
+            
+            dataset = dataset.prefetch(buffer_size=1)
             datasets.append(dataset)
         print('Duration is {}'.format(time.time()-t))
     return datasets
