@@ -46,7 +46,7 @@ FORMAT = "[%(lineno)4s : %(funcName)-30s ] %(message)s"
 #logging.basicConfig(level=logging.INFO, format=FORMAT)
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
-dataset_path='dataset_new'
+dataset_path='dataset_10_attr'
 dataset_train_path=os.path.join(dataset_path, 'train')
 dataset_val_path=os.path.join(dataset_path, 'validation')
 dataset_test_path=os.path.join(dataset_path, 'test')
@@ -152,7 +152,7 @@ def create_category_structure(category_names):
         if not os.path.exists(os.path.join(category_path_name)):
             os.makedirs(category_path_name)
 
-def get_attribute_of_interest():
+def get_attribute_of_interest(interested_attr):
     attr = []
     attr_names = []
     attr_types = []
@@ -161,14 +161,14 @@ def get_attribute_of_interest():
         next(file_list_attr_cloth)
         for line in file_list_attr_cloth:
             line = line.split()
-            if(line[1] in ['3', '5']):
+            if(line[1] in interested_attr):
                 attr.append(True)
                 attr_types.append(line[1])
                 attr_names.append(line[0])
-#                 logging.debug('select attr {}'.format(line[0]))
+                logging.debug('select attr {}'.format(line[0]))
             else:
                 attr.append(False)
-#                 logging.debug('unselect attr {}'.format(line[0]))
+                logging.debug('unselect attr {}'.format(line[0]))
 
     # Write the attribute summary
     with open(dataset_path + '/new_list_attr_cloth.txt', 'w') as file_new_list_attr_cloth:
@@ -305,17 +305,50 @@ def generate_labels(attr_idx):
                         for i, name in enumerate(['train', 'val', 'test']):
                             print(name + 'count: {}\n'.format(cnts[i]))
 
+def find_densest_attr(topx):
+    attr_sum = None
+    attr_name = []
+    with open(fashion_dataset_path + '/Anno/list_attr_cloth.txt') as file_list_attr_cloth:
+        next(file_list_attr_cloth)
+        next(file_list_attr_cloth)
+        for line in file_list_attr_cloth:
+            attr = line.split()[:-1]
+            attr_name.append(' '.join(attr))
+    
+    with open(fashion_dataset_path + '/Anno/list_attr_img.txt') as file_list_attr_img:
+        with open(fashion_dataset_path + '/Eval/list_eval_partition.txt', 'r') as file_list_eval_ptr:
+
+            count = 0
+            next(file_list_attr_img)
+            next(file_list_attr_img)
+            for line in file_list_attr_img:
+                line = line.split()
+                if attr_sum is None:
+                    attr_sum = np.zeros(len(line)-1)
                 
+                line = np.array(line[1:])
+                # print(line)
+                one_hot = list(map(lambda x: 1 if x == '1' else 0, line))
+                attr_sum += one_hot
+                count += 1
+    print(attr_sum)
+    sort_attr_sum = attr_sum.argsort()[-topx:][::-1]
+#     print(sort_attr_sum)
+#     print(np.array(attr_name)[sort_attr_sum])
+    logging.debug(sort_attr_sum)
+    return np.array(attr_name)[sort_attr_sum]
+                                
             
 
 
 if __name__ == '__main__':
 
-#     create_dataset_split_structure()
+    create_dataset_split_structure()
     category_names = get_category_names()
-#     logging.debug('category_names {}'.format(category_names))
-    attribute_idx, attribute_name = get_attribute_of_interest()
-#     logging.debug('Selected labels {}'.format(attribute_name))
+    logging.debug('category_names {}'.format(category_names))
+    interested_attr = find_densest_attr(100)
+    attribute_idx, attribute_name = get_attribute_of_interest(interested_attr)
+    logging.debug('Selected labels {}'.format(attribute_name))
 #     generate_dataset_images(category_names)
     generate_labels(attribute_idx)
 

@@ -89,7 +89,7 @@ def prepare_new_datasets(batch_size):
             dataset = dataset.map(_parse_function)
             dataset = dataset.batch(batch_size)
             
-            dataset = dataset.prefetch(batch_size)
+#             dataset = dataset.prefetch(batch_size)
             datasets.append(dataset)
         print('Duration is {}'.format(time.time()-t))
     return datasets
