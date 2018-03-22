@@ -21,9 +21,10 @@ def IND_z(x, is_training=True):
 
         bn4_flatten = tf.contrib.layers.flatten(bn4)
         fc1 = tf.contrib.layers.fully_connected(bn4_flatten, 4096)
-        fc2 = tf.contrib.layers.fully_connected(fc1, 100, activation_fn=None) # dims n * 100
+        bn5 = tf.contrib.layers.batch_norm(fc1, is_training=True)
+        fc2 = tf.contrib.layers.fully_connected(bn5, 100, activation_fn=None) # dims n * 100
 
-        return fc1
+        return fc2
 
 def IND_y(x, ny, is_training=True):
     # Expected input dims: n * 64 * 64 * 3
@@ -42,7 +43,8 @@ def IND_y(x, ny, is_training=True):
 
         bn4_flatten = tf.contrib.layers.flatten(bn4)
         fc1 = tf.contrib.layers.fully_connected(bn4_flatten, 512)
-        fc2 = tf.contrib.layers.fully_connected(fc1, ny, activation_fn=None) # dims n * ny
+        bn5 = tf.contrib.layers.batch_norm(fc1, is_training=True)
+        fc2 = tf.contrib.layers.fully_connected(bn5, ny, activation_fn=None) # dims n * ny
 
     return fc2
 
@@ -51,8 +53,7 @@ def generator(z, y, is_training=True):
     with tf.variable_scope('Generator', reuse=tf.AUTO_REUSE):
         concat = tf.concat([z, y], 1)
         x = tf.expand_dims(tf.expand_dims(concat, 1), 2) # dims: n * 1 * 1 * (100 + ny)
-        paddings = tf.constant([[0, 0], [1, 1], [1, 1], [0, 0]])
-
+        
         deconv1 = tf.contrib.layers.conv2d_transpose(x, 512, [4,4], stride=[2,2], padding='VALID')
         bn1 = tf.contrib.layers.batch_norm(deconv1, is_training=True)
 
@@ -65,8 +66,10 @@ def generator(z, y, is_training=True):
         deconv4 = tf.contrib.layers.conv2d_transpose(bn3, 64, [4,4], stride=[2,2], padding='VALID')
         bn4 = tf.contrib.layers.batch_norm(deconv4[:,1:-1,1:-1,:], is_training=True)
 
-        deconv5 = tf.contrib.layers.conv2d_transpose(bn4, 3, [4,4], stride=[2,2], padding='VALID') # dims n * 64 * 64 * 3
+        deconv5 = tf.contrib.layers.conv2d_transpose(bn4, 3, [4,4], stride=[2,2], padding='VALID', activation_fn=tf.nn.sigmoid) # dims n * 64 * 64 * 3
         #activation_fn=tf.nn.tanh
+        #activation_fn=tf.nn.sigmoid
+        
         return deconv5[:,1:-1,1:-1,:]
 
 def discriminator(x, y, ny, is_training=True):
@@ -81,19 +84,25 @@ def discriminator(x, y, ny, is_training=True):
 
         conv2 = tf.contrib.layers.conv2d(tf.pad(conv1_concat, paddings), 128, [4,4], stride=[2,2], padding='VALID', activation_fn=tf.nn.leaky_relu)
         bn2 = tf.contrib.layers.batch_norm(conv2, is_training=True)
+        dropout2 = tf.contrib.layers.dropout(bn2, keep_prob=0.7, is_training=is_training)
 
-        conv3 = tf.contrib.layers.conv2d(tf.pad(bn2, paddings), 256, [4,4], stride=[2,2], padding='VALID', activation_fn=tf.nn.leaky_relu)
+        conv3 = tf.contrib.layers.conv2d(tf.pad(dropout2, paddings), 256, [4,4], stride=[2,2], padding='VALID', activation_fn=tf.nn.leaky_relu)
         bn3 = tf.contrib.layers.batch_norm(conv3, is_training=True)
+        dropout3 = tf.contrib.layers.dropout(bn3, keep_prob=0.7, is_training=is_training)
 
-        conv4 = tf.contrib.layers.conv2d(tf.pad(bn3, paddings), 512, [4,4], stride=[2,2], padding='VALID', activation_fn=tf.nn.leaky_relu)
+        conv4 = tf.contrib.layers.conv2d(tf.pad(dropout3, paddings), 512, [4,4], stride=[2,2], padding='VALID', activation_fn=tf.nn.leaky_relu)
         bn4 = tf.contrib.layers.batch_norm(conv4, is_training=True)
 
-        conv5 = tf.contrib.layers.conv2d(bn4, 1, [4,4], stride=[1,1], padding='VALID', activation_fn=None) # dims n * 1 * 1 * 1
+        #conv5 = tf.contrib.layers.conv2d(bn4, 1, [4,4], stride=[1,1], padding='VALID', activation_fn=None) # dims n * 1 * 1 * 1
+        bn4_flat = tf.contrib.layers.flatten(bn4) # dims: n * (4*4*1024)
+        fc1 = tf.contrib.layers.fully_connected(bn4_flat, 1000, activation_fn=tf.nn.relu)
+        fc_bn1 = tf.contrib.layers.batch_norm(fc1, is_training=is_training)
+        fc2 = tf.contrib.layers.fully_connected(fc_bn1, 1, activation_fn=tf.nn.sigmoid)
 
-        return tf.squeeze(conv5)
+        return fc2#tf.squeeze(conv5)
 
 def autoencoder_loss(x, y, ny):
-    # Expected input dims: n * 64 * 64 * 3 & n * ny
+    # Expected input dims: n * 64 * 64 * 3 & n * ny 
     
     Ez = IND_z(x)
     gen = generator(Ez, y)
@@ -102,23 +111,25 @@ def autoencoder_loss(x, y, ny):
     return loss_autoencoder
 
 
-def gan_loss(x, y, ny):
-    # Expected input dims: n * 64 * 64 * 3 & n * ny
+def gan_loss(x, y, z, ny):
+    # Expected input dims: n * 64 * 64 * 3 & n * ny & n * 100
 
-    Ez = IND_z(x)
-    gen = generator(Ez, y)
+    gen = generator(z, y)
 
 
     pred_fake = discriminator(gen, y, ny)
     pred_real = discriminator(x, y, ny)
+    
+    loss_gen = -tf.reduce_mean(tf.log(pred_fake))
+    loss_pred = -tf.reduce_mean(tf.log(pred_real) + tf.log(1. - pred_fake))
 
-    loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(pred_fake), logits=pred_fake))
-    loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(pred_real), logits=pred_real))
+    #loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(pred_fake), logits=pred_fake))
+    #loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(pred_real), logits=pred_real))
 
-    loss_pred = loss_fake + loss_real
-    loss_gen = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(pred_fake), logits=pred_fake))
+    #loss_pred = loss_fake + loss_real
+    #loss_gen = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(pred_fake), logits=pred_fake))
 
-    return loss_pred, loss_gen, gen, pred_fake, pred_real
+    return loss_pred, loss_gen, gen
 
 def classify_loss(x, y, ny):
     Ey = IND_y(x, ny, is_training=True)
