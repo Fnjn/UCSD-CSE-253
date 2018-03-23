@@ -29,9 +29,9 @@ dataset_val_path=os.path.join(dataset_path, 'validation')
 dataset_test_path=os.path.join(dataset_path, 'test')
 #dataset_src_path='fashion_data'
 fashion_dataset_path='fashion_data/'
-dataset_train_labels_path=os.path.join(dataset_train_path, 'labels.txt')
-dataset_test_labels_path=os.path.join(dataset_test_path, 'labels.txt')
-dataset_val_labels_path=os.path.join(dataset_val_path, 'labels.txt')
+dataset_train_labels_path=os.path.join('dataset_100/train', 'labels.txt')
+dataset_test_labels_path=os.path.join('dataset_100/test', 'labels.txt')
+dataset_val_labels_path=os.path.join('dataset_100/validation', 'labels.txt')
 
 def list_devices():
     from tensorflow.python.client import device_lib
@@ -50,7 +50,7 @@ def save_image(x, filename):
 def save_img(I):
     im = Image.fromarray(np.uint8(I))
     
-def show_gen(next_batch, gen):
+def show_gen(next_batch, sess, gen):
     imgs, labs = sess.run(next_batch_val)
     gen_image = sess.run([gen], feed_dict={x:imgs, y:labs})
 
@@ -102,7 +102,7 @@ def prepare_new_datasets(batch_size):
         print('Duration is {}'.format(time.time()-t))
     return datasets
     
-def prepare_datasets():
+def prepare_datasets(norm=False):
     datasets = []
     for i, labels_path, img_path in zip(range(3), [dataset_train_labels_path, 
                                                    dataset_val_labels_path, 
@@ -123,7 +123,10 @@ def prepare_datasets():
 #                 cnt += 1 #dev
 #                 if cnt >10000:
 #                     break
-            imgs = np.array(imgs)/255.
+            shift = 0
+            if norm:
+                shift = 255
+            imgs = (np.array(imgs)-shift)/255.
             labels = np.array(labels)
             datasets.append(DataSet(imgs, labels))
         print('Duration is {}'.format(time.time()-t))

@@ -46,7 +46,7 @@ FORMAT = "[%(lineno)4s : %(funcName)-30s ] %(message)s"
 #logging.basicConfig(level=logging.INFO, format=FORMAT)
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
-dataset_path='dataset_10_attr'
+dataset_path='dataset_100'
 dataset_train_path=os.path.join(dataset_path, 'train')
 dataset_val_path=os.path.join(dataset_path, 'validation')
 dataset_test_path=os.path.join(dataset_path, 'test')
@@ -159,16 +159,18 @@ def get_attribute_of_interest(interested_attr):
     with open(fashion_dataset_path + '/Anno/list_attr_cloth.txt') as file_list_attr_cloth:
         next(file_list_attr_cloth)
         next(file_list_attr_cloth)
+        count = 0
         for line in file_list_attr_cloth:
             line = line.split()
-            if(line[1] in interested_attr):
+            if(count in interested_attr):
                 attr.append(True)
-                attr_types.append(line[1])
+                attr_types.append(line[-1])
                 attr_names.append(line[0])
                 logging.debug('select attr {}'.format(line[0]))
             else:
                 attr.append(False)
                 logging.debug('unselect attr {}'.format(line[0]))
+            count += 1
 
     # Write the attribute summary
     with open(dataset_path + '/new_list_attr_cloth.txt', 'w') as file_new_list_attr_cloth:
@@ -335,8 +337,8 @@ def find_densest_attr(topx):
     sort_attr_sum = attr_sum.argsort()[-topx:][::-1]
 #     print(sort_attr_sum)
 #     print(np.array(attr_name)[sort_attr_sum])
-    logging.debug(sort_attr_sum)
-    return np.array(attr_name)[sort_attr_sum]
+    logging.debug(np.array(attr_name)[sort_attr_sum])
+    return sort_attr_sum
                                 
             
 
@@ -347,10 +349,10 @@ if __name__ == '__main__':
     category_names = get_category_names()
     logging.debug('category_names {}'.format(category_names))
     interested_attr = find_densest_attr(100)
-    attribute_idx, attribute_name = get_attribute_of_interest(interested_attr)
-    logging.debug('Selected labels {}'.format(attribute_name))
+#     attribute_idx, attribute_name = get_attribute_of_interest(interested_attr)
+#     logging.debug('Selected labels {}'.format(attribute_name))
 #     generate_dataset_images(category_names)
-    generate_labels(attribute_idx)
+    generate_labels(interested_attr)
 
 
 
